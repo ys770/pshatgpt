@@ -5,7 +5,7 @@
 AI-assisted tzuras hadaf. Click any line of Gemara, Rashi/Rashbam, or Tosafot — get a contextual explanation streamed to you.
 
 Pshat (פשט) = the plain-meaning reading. This tool gives you that first layer, fast, with the commentary structure intact.
-
+### Please note that this is still under development and will be updated often... feel free to help out!
 ## Quick start
 
 1. Open [ys770.github.io/PshatGPT](https://ys770.github.io/PshatGPT/)
