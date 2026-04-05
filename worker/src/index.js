@@ -22,6 +22,7 @@ function corsHeaders(origin, env) {
     "Access-Control-Allow-Origin": allow,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "content-type, x-anthropic-key",
+    "Access-Control-Expose-Headers": "x-pshatgpt-remaining, x-pshatgpt-limit",
     "Access-Control-Max-Age": "86400",
     "Vary": "Origin",
   };
