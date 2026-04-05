@@ -954,9 +954,48 @@ function openExplain(ref, kind, hebrewText, englishText, context) {
 
 function closeModal() {
   $("#modal").classList.add("modal-hidden");
+  $("#minimized-pill").classList.add("minimized-hidden");
   if (currentStream) { currentStream.abort(); currentStream = null; }
   conversation = [];
   if (!anyModalOpen()) unlockBodyScroll();
+}
+
+function minimizeModal() {
+  // Hide the modal but keep the stream running + conversation state.
+  $("#modal").classList.add("modal-hidden");
+  unlockBodyScroll();
+  showMinimizedPill();
+}
+
+function restoreModal() {
+  $("#modal").classList.remove("modal-hidden");
+  $("#minimized-pill").classList.add("minimized-hidden");
+  lockBodyScroll();
+  // Scroll to bottom of modal body so they see latest content.
+  const body = $("#modal-body");
+  if (body) body.scrollTop = body.scrollHeight;
+}
+
+function showMinimizedPill() {
+  const pill = $("#minimized-pill");
+  const kind = $("#modal-kind").textContent;
+  const ref = $("#modal-ref").textContent;
+  pill.querySelector(".pill-label").textContent = `${kind}: ${ref}`;
+  pill.classList.remove("minimized-hidden");
+  // Show spinner if currently streaming, otherwise mark as done.
+  updateMinimizedPillState();
+}
+
+function updateMinimizedPillState() {
+  const pill = $("#minimized-pill");
+  if (pill.classList.contains("minimized-hidden")) return;
+  if (currentStream) {
+    pill.classList.remove("pill-done");
+    pill.classList.add("pill-running");
+  } else {
+    pill.classList.add("pill-done");
+    pill.classList.remove("pill-running");
+  }
 }
 
 // A commentary longer than this triggers the deep-analysis system prompt.
@@ -1614,6 +1653,8 @@ async function streamTurn(toolRound = 0) {
   currentStream = null;
   input.disabled = false; sendBtn.disabled = false;
   if (!$("#modal").classList.contains("modal-hidden")) input.focus();
+  // If minimized, update pill to show "done" state.
+  updateMinimizedPillState();
 }
 
 function updateAssistantText(assistantDiv, text) {
@@ -1819,6 +1860,16 @@ $$(".amud-btn").forEach(b => {
   b.addEventListener("click", () => { setAmud(b.dataset.amud); loadCurrentDaf(); });
 });
 $$("[data-close]").forEach(el => el.addEventListener("click", closeModal));
+$$("[data-minimize]").forEach(el => el.addEventListener("click", minimizeModal));
+// Restore on pill click (but not when clicking the X button inside)
+$("#minimized-pill").addEventListener("click", (e) => {
+  if (e.target.closest(".pill-close")) return;
+  restoreModal();
+});
+$("#minimized-pill").querySelector(".pill-close").addEventListener("click", (e) => {
+  e.stopPropagation();
+  closeModal();
+});
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") { closeModal(); closeSettings(); }
 });
