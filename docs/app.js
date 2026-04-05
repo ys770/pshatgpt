@@ -143,6 +143,25 @@ const SEFARIA_RELATED = "https://www.sefaria.org/api/related";
 const ANTHROPIC = "https://api.anthropic.com/v1/messages";
 const MODEL = "claude-sonnet-4-5";
 
+// Tools Claude can call mid-conversation.
+const TOOLS = [
+  {
+    name: "fetch_sefaria_text",
+    description: "Fetch the Hebrew (and English if available) text of any Sefaria reference. Use this when you need to quote or verify a text you don't currently have in context — for example, a Tosafot in a different sugya, a Rashi on a different daf, a Rambam, a cross-reference the gemara or meforshim cite, or a pasuk. Use the exact Sefaria ref format: 'Tosafot on Bava Metzia 21a:3', 'Bava Batra 28b:4', 'Chiddushei Ramban on Bava Batra 33b:5', 'Mishneh Torah, Robbery and Lost Property 4:14'. Don't fetch things you already have in context, and don't fetch the same ref twice.",
+    input_schema: {
+      type: "object",
+      properties: {
+        ref: {
+          type: "string",
+          description: "The Sefaria reference to fetch, e.g. 'Tosafot on Bava Metzia 21a:3'"
+        }
+      },
+      required: ["ref"]
+    }
+  }
+];
+const MAX_TOOL_ROUNDS = 5; // safety cap per user turn
+
 // Free-tier proxy: Cloudflare Worker that forwards to Anthropic using the
 // owner's API key, rate-limited per IP. Leave empty string to disable.
 // Replace with your worker URL after deploying worker/ (see worker/README.md).
@@ -181,6 +200,34 @@ async function sefariaText(ref) {
   const r = await fetch(url);
   if (!r.ok) throw new Error(`Sefaria ${r.status}: ${ref}`);
   return r.json();
+}
+
+// Tool implementation: fetch a Sefaria text for Claude.
+async function execFetchSefariaText(ref) {
+  try {
+    const data = await sefariaText(ref);
+    let hebrew = "", english = "";
+    for (const v of data.versions || []) {
+      if (v.language === "he") hebrew = flattenText(v.text);
+      else if (v.language === "en") english = clean(flattenText(v.text));
+    }
+    if (!hebrew && !english) {
+      return { error: `No text found at ref: ${ref}` };
+    }
+    return {
+      ref: data.ref || ref,
+      hebrew: hebrew.slice(0, 3000),
+      english: english.slice(0, 3000),
+    };
+  } catch (e) {
+    return { error: `Failed to fetch '${ref}': ${e.message}. Verify the ref format.` };
+  }
+}
+
+function flattenText(t) {
+  if (typeof t === "string") return t;
+  if (Array.isArray(t)) return t.map(flattenText).filter(Boolean).join(" ");
+  return "";
 }
 
 async function fetchDafSegments(baseRef) {
@@ -1091,6 +1138,26 @@ You are a teacher, not an entertainer. Keep the focus on learning.
 The tone: a warm, serious talmid chacham who meets the learner where they
 are but keeps the learning real.
 
+## TOOL USE — fetch_sefaria_text
+
+You have a tool called \`fetch_sefaria_text\` that pulls any Sefaria reference.
+Use it PROACTIVELY when:
+- The learner references a text you don't have in context (a Tosafot in a
+  different sugya, a Rashi on a different daf, a cross-reference cited in
+  this sugya, a Rambam, Shulchan Aruch, a pasuk)
+- You want to VERIFY a quote before stating it — if you're tempted to
+  paraphrase "and the gemara in BM 21a says X", fetch BM 21a first
+- You want to check a parallel sugya that Tosafot or Rashba cites
+
+Don't abuse it:
+- Don't fetch things you already have (check the full-daf context first)
+- Don't fetch the same ref twice
+- Max ~3 lookups per turn; don't loop
+
+After fetching, ground your answer in the actual text you got back. If the
+fetch failed or returned empty, tell the learner and ask them to verify the
+ref.
+
 ## HOW TO USE MULTIPLE MEFORSHIM (critical)
 
 You will be given many meforshim on this daf — Rashi/Rashbam, Tosafot, often
@@ -1232,20 +1299,25 @@ function appendUserTurn(text) {
   body.scrollTop = body.scrollHeight;
 }
 
-async function streamTurn() {
-  if (currentStream) currentStream.abort();
+async function streamTurn(toolRound = 0) {
+  if (toolRound === 0 && currentStream) currentStream.abort();
   const body = $("#modal-body");
 
-  // Append an assistant container + cursor. All turns go inside modal-body.
-  const assistantDiv = document.createElement("div");
-  assistantDiv.className = "turn-assistant";
-  assistantDiv.innerHTML = '<span class="cursor"></span>';
-  // First turn: REPLACE the initial cursor; follow-ups: APPEND.
-  if (conversation.length === 1) {
-    body.innerHTML = "";
+  // Only create a new assistant container for the first API round of a turn.
+  let assistantDiv;
+  if (toolRound === 0) {
+    assistantDiv = document.createElement("div");
+    assistantDiv.className = "turn-assistant";
+    assistantDiv.innerHTML = '<span class="cursor"></span>';
+    if (conversation.length === 1) {
+      body.innerHTML = "";
+    }
+    body.appendChild(assistantDiv);
+    body.scrollTop = body.scrollHeight;
+  } else {
+    // Subsequent rounds reuse the last assistantDiv
+    assistantDiv = body.querySelector(".turn-assistant:last-child");
   }
-  body.appendChild(assistantDiv);
-  body.scrollTop = body.scrollHeight;
 
   // Disable input during streaming.
   const input = $("#followup-input");
@@ -1286,6 +1358,7 @@ async function streamTurn() {
         temperature: 0.3,
         system: currentSystem,
         messages: conversation,
+        tools: TOOLS,
         stream: true,
       }),
     });
@@ -1323,7 +1396,12 @@ async function streamTurn() {
   const reader = resp.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
-  let accumulated = "";
+
+  // Accumulate both text and tool_use blocks as they stream in.
+  let accumulatedText = "";
+  let stopReason = null;
+  const contentBlocks = []; // [{type:'text',text:'...'}, {type:'tool_use',id,name,input}]
+  const toolInputAccumulators = {}; // index → partial JSON string
 
   try {
     while (true) {
@@ -1338,24 +1416,107 @@ async function streamTurn() {
         if (!data || data === "[DONE]") continue;
         try {
           const evt = JSON.parse(data);
-          if (evt.type === "content_block_delta" && evt.delta?.type === "text_delta") {
-            accumulated += evt.delta.text;
-            assistantDiv.innerHTML = renderMarkdownish(accumulated) + '<span class="cursor"></span>';
-            body.scrollTop = body.scrollHeight;
+          if (evt.type === "content_block_start") {
+            const b = evt.content_block;
+            contentBlocks[evt.index] = b.type === "tool_use"
+              ? { type: "tool_use", id: b.id, name: b.name, input: {} }
+              : { type: "text", text: "" };
+            if (b.type === "tool_use") {
+              toolInputAccumulators[evt.index] = "";
+              // Show a subtle "looking up" indicator
+              const toolNote = document.createElement("div");
+              toolNote.className = "tool-use-note";
+              toolNote.dataset.toolIdx = evt.index;
+              toolNote.innerHTML = `<span class="tool-icon">📖</span> <span class="tool-text">looking up…</span>`;
+              assistantDiv.appendChild(toolNote);
+            }
+          } else if (evt.type === "content_block_delta") {
+            if (evt.delta?.type === "text_delta") {
+              accumulatedText += evt.delta.text;
+              contentBlocks[evt.index].text += evt.delta.text;
+              // Render just the text blocks accumulated so far
+              updateAssistantText(assistantDiv, accumulatedText);
+              body.scrollTop = body.scrollHeight;
+            } else if (evt.delta?.type === "input_json_delta") {
+              toolInputAccumulators[evt.index] += evt.delta.partial_json || "";
+            }
+          } else if (evt.type === "content_block_stop") {
+            const block = contentBlocks[evt.index];
+            if (block?.type === "tool_use") {
+              try { block.input = JSON.parse(toolInputAccumulators[evt.index] || "{}"); }
+              catch { block.input = {}; }
+              // Update the indicator with the actual ref
+              const note = assistantDiv.querySelector(`[data-tool-idx="${evt.index}"] .tool-text`);
+              if (note && block.input.ref) note.textContent = `looking up ${block.input.ref}…`;
+            }
+          } else if (evt.type === "message_delta") {
+            if (evt.delta?.stop_reason) stopReason = evt.delta.stop_reason;
           }
-        } catch (e) { /* partial */ }
+        } catch (e) { /* partial frame */ }
       }
     }
   } catch (err) {
     if (err.name !== "AbortError") console.error(err);
   }
-  assistantDiv.innerHTML = renderMarkdownish(accumulated);
-  // Save assistant turn to conversation history.
-  if (accumulated) conversation.push({ role: "assistant", content: accumulated });
+
+  updateAssistantText(assistantDiv, accumulatedText);
+
+  // If Claude wanted to call tools, execute them and loop.
+  if (stopReason === "tool_use" && toolRound < MAX_TOOL_ROUNDS) {
+    // Save assistant turn (text + tool_use blocks) to conversation
+    conversation.push({ role: "assistant", content: contentBlocks.filter(Boolean) });
+    // Execute each tool call and collect results
+    const toolResults = [];
+    for (const block of contentBlocks) {
+      if (block?.type !== "tool_use") continue;
+      let result;
+      if (block.name === "fetch_sefaria_text") {
+        result = await execFetchSefariaText(block.input?.ref || "");
+      } else {
+        result = { error: `Unknown tool: ${block.name}` };
+      }
+      // Update the UI indicator to show it's done
+      const note = assistantDiv.querySelector(`[data-tool-idx="${contentBlocks.indexOf(block)}"]`);
+      if (note) {
+        const text = note.querySelector(".tool-text");
+        if (text) {
+          if (result.error) text.textContent = `couldn't find ${block.input?.ref || "text"}`;
+          else text.textContent = `fetched ${result.ref || block.input?.ref}`;
+        }
+        note.classList.add("tool-use-done");
+      }
+      toolResults.push({
+        type: "tool_result",
+        tool_use_id: block.id,
+        content: JSON.stringify(result),
+      });
+    }
+    // Push tool results as a user turn
+    conversation.push({ role: "user", content: toolResults });
+    // Recurse
+    return streamTurn(toolRound + 1);
+  }
+
+  // Final: save the complete assistant turn
+  if (contentBlocks.some(Boolean)) {
+    conversation.push({ role: "assistant", content: contentBlocks.filter(Boolean) });
+  }
   currentStream = null;
   input.disabled = false; sendBtn.disabled = false;
-  // Focus input for quick follow-up (unless modal closed).
   if (!$("#modal").classList.contains("modal-hidden")) input.focus();
+}
+
+function updateAssistantText(assistantDiv, text) {
+  // Preserve tool-use notes inside the div, replace/update the markdown section.
+  let mdDiv = assistantDiv.querySelector(".md-content");
+  if (!mdDiv) {
+    // Clear the initial cursor
+    assistantDiv.innerHTML = "";
+    mdDiv = document.createElement("div");
+    mdDiv.className = "md-content";
+    assistantDiv.appendChild(mdDiv);
+  }
+  mdDiv.innerHTML = renderMarkdownish(text) + (text ? '<span class="cursor"></span>' : '<span class="cursor"></span>');
 }
 
 function renderMarkdownish(text) {
