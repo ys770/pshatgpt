@@ -917,40 +917,51 @@ Use the gemara + meforshim you've been given to trace the dialectic. Produce a s
 Two sentences max: what's the sugya asking, what's at stake. Don't re-translate the whole daf.
 
 ## Voices
-For each named speaker (amora, tanna, or stam), a labeled card:
+Include these as voices in their own right:
+
+1. **Every named amora/tanna** in the gemara text itself (Rav Nachman, R' Abba, etc.)
+2. **The stam** — the anonymous Gemara narrator, when it raises questions or resolves them
+3. **Rashi / Rashbam** — their READING of the sugya is a position. What do they understand the amora to mean? Where do they resolve ambiguity?
+4. **Tosafot** — their kushya + tirutz is a position. What bothered them? What did they answer?
+5. Any other loaded mefaresh (Ramban, Rashba, Meiri, etc.) who takes a distinct position worth mapping
+
+For each voice, a labeled card:
 
 ### [Speaker name] — [one-line position]
 **Claim**: what they hold, in natural English
-**Reasoning** (if explicit in the text): the logic they rely on
-**Based on segment(s)**: [ref]
+**Reasoning** (if explicit): the logic they rely on
+**Based on**: [ref or segment]
 
 ## Dialectic (the give-and-take)
 Show how the voices connect, in the order they appear. Use these relation labels:
-- **→ challenges**: Voice B disputes A
-- **→ qualifies**: Voice B narrows/refines A
-- **→ resolves**: Voice B answers a challenge against A
-- **→ extends**: Voice B generalizes A
-- **→ parallels**: Voice B cites a similar case
-- **→ rejects**: Voice B discards A outright
+- **→ challenges**: B disputes A
+- **→ qualifies**: B narrows/refines A
+- **→ resolves**: B answers a challenge against A
+- **→ extends**: B generalizes A
+- **→ parallels**: B cites a similar case
+- **→ rejects**: B discards A outright
+- **→ reads as**: a mefaresh offering an interpretation of an amora's position
+- **→ disagrees with**: when two rishonim (e.g. Rashi vs Tosafot) read the same amora differently
 
-Format each step as:
+Format:
 > **Stam** → challenges **Rav Zevid** — "if we believe him for produce, why not land?"
-> **Stam** → resolves — "land requires a deed, produce doesn't"
+> **Rashi** → reads as **Rav Zevid** — takes the principle to mean X
+> **Tosafot** → disagrees with **Rashi** — argues the principle is actually Y
 
 ## Unresolved / Open
-If the sugya leaves something open (machlokes that's never settled, a kushya without a tirutz), note it here.
+Machlokes never settled, kushya without a tirutz, Rashi/Tosafot disagreements that the gemara doesn't resolve — note them here.
 
 ## Bottom line
-One or two sentences: what does the sugya establish? What chiddush emerges?
+What the sugya establishes + any rishonim chiddush that emerges.
 
 ---
 
 **Rules:**
-- Only include voices actually named in the provided gemara + meforshim
-- If a voice isn't clearly in your context, don't invent them
+- Only include voices actually present in the provided gemara + meforshim
+- If a voice isn't in your context, don't invent them
 - Keep positions concise — this is a MAP, not a re-explanation
-- Don't include the meforshim (Rashi/Rashbam/Tosafot) as voices unless THEY made the machlokes themselves; they're tools for understanding the amoraim
-- The dialectic order should match the gemara's flow (segment by segment)
+- When a mefaresh takes a distinct position, include them as a voice; when they just translate/paraphrase, you can skip them
+- The dialectic order should match the gemara's flow (segment by segment); mefarshim come right after the line they're explaining
 - Anti-hallucination rules from before still apply`;
 
 const DEEP_TOSAFOT_PROMPT = `You are a talmid chacham doing a DEEP, STRUCTURED analysis of a long mefaresh for a serious learner. This is iyun-level — do NOT summarize. Break the Hebrew text into labeled parts, then walk through each.
