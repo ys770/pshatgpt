@@ -457,11 +457,21 @@ function setAmud(amud) {
 }
 
 // ---------- Render ----------
+const MOBILE_QUERY = window.matchMedia("(max-width: 900px)");
+
 function renderDaf(daf) {
   $("#daf-title").textContent = daf.base_ref;
   const container = $("#daf");
   container.innerHTML = "";
 
+  if (MOBILE_QUERY.matches) {
+    container.appendChild(renderDafMobile(daf));
+  } else {
+    container.appendChild(renderDafDesktop(daf));
+  }
+}
+
+function renderDafDesktop(daf) {
   const allCommentaries = daf.segments.flatMap(s => s.commentaries);
   const byName = groupBy(allCommentaries, c => c.commentator);
 
@@ -480,9 +490,82 @@ function renderDaf(daf) {
     page.appendChild(renderMargin("tosafot-margin", "Tosafot", byName.get("Tosafot")));
   }
   page.appendChild(renderGemaraBody(daf.segments));
-
-  container.appendChild(page);
+  return page;
 }
+
+function renderDafMobile(daf) {
+  const page = document.createElement("div");
+  page.className = "daf-page daf-mobile";
+
+  for (const seg of daf.segments) {
+    const article = document.createElement("article");
+    article.className = "mseg";
+
+    // Gemara segment
+    const gem = document.createElement("div");
+    gem.className = "mseg-gemara hebrew-text";
+    const segSpan = document.createElement("span");
+    segSpan.className = "seg";
+    segSpan.dataset.ref = seg.ref;
+    segSpan.textContent = seg.hebrew;
+    segSpan.onclick = (e) => {
+      e.stopPropagation();
+      openExplain(seg.ref, "gemara", seg.hebrew, seg.english, {
+        kind: "gemara", text: seg.hebrew, english: seg.english,
+      });
+    };
+    gem.appendChild(segSpan);
+    const label = document.createElement("div");
+    label.className = "mseg-label";
+    label.textContent = `[${seg.index}] ${seg.ref}`;
+    article.appendChild(label);
+    article.appendChild(gem);
+
+    // Group this segment's commentaries by commentator
+    const byName = groupBy(seg.commentaries, c => c.commentator);
+    const rashiSideName = byName.has("Rashi") ? "Rashi"
+                        : byName.has("Rashbam") ? "Rashbam"
+                        : byName.has("Ran") ? "Ran"
+                        : null;
+    if (rashiSideName) {
+      article.appendChild(renderMobileCommBlock("rashi", rashiSideName, byName.get(rashiSideName)));
+    }
+    if (byName.has("Tosafot")) {
+      article.appendChild(renderMobileCommBlock("tosafot", "Tosafot", byName.get("Tosafot")));
+    }
+
+    page.appendChild(article);
+  }
+  return page;
+}
+
+function renderMobileCommBlock(colKind, name, items) {
+  // colKind: "rashi" or "tosafot" — used to hook into column-toggle classes
+  const block = document.createElement("div");
+  block.className = `mseg-comm mseg-${colKind}`;
+  const label = document.createElement("div");
+  label.className = "mseg-comm-label";
+  label.innerHTML = `<span class="mseg-comm-name">${name}</span><span class="mseg-comm-he">${COMMENTATOR_HEBREW[name] || ""}</span>`;
+  block.appendChild(label);
+  for (const c of items) {
+    const d = document.createElement("div");
+    d.className = "dibur hebrew-text";
+    d.appendChild(withHeadword(c.hebrew));
+    d.onclick = () => openExplain(c.ref, c.commentator, c.hebrew, null, {
+      kind: "commentary",
+      commentator: c.commentator,
+      text: c.hebrew,
+    });
+    block.appendChild(d);
+  }
+  return block;
+}
+
+// Re-render on crossing the mobile/desktop breakpoint.
+MOBILE_QUERY.addEventListener("change", () => {
+  if (currentDaf) renderDaf(currentDaf);
+  applyColVisibility();
+});
 
 function renderMargin(cls, name, items) {
   const div = document.createElement("aside");

@@ -1154,70 +1154,93 @@ main { max-width: 1400px; margin: 0 auto; padding: 2rem; }
   }
   .col-toggle:not(.active) { opacity: 0.6; }
 
-  /* Column visibility driven by data-hidden classes on daf-page */
-  .daf-page.hide-gemara .gemara-body { display: none; }
-  .daf-page.hide-rashi .rashi-margin { display: none; }
-  .daf-page.hide-tosafot .tosafot-margin { display: none; }
+  /* Column visibility on mobile (toggles at top of daf) */
+  .daf-page.hide-gemara .mseg-gemara,
+  .daf-page.hide-gemara .mseg-label { display: none; }
+  .daf-page.hide-rashi .mseg-rashi { display: none; }
+  .daf-page.hide-tosafot .mseg-tosafot { display: none; }
 
-  #daf { padding: 0.75rem; }
-  .daf-page { display: flex; flex-direction: column; gap: 1rem; }
-  .daf-page::after { display: none; }  /* no floats to clear */
+  #daf { padding: 0; background: transparent; border: none; box-shadow: none; }
+  .daf-mobile { display: flex; flex-direction: column; gap: 1.25rem; }
 
-  /* Gemara becomes the primary full-width card */
-  .gemara-body {
-    order: 1;
-    font-size: 1.15rem;
-    line-height: 1.85;
-    padding: 1rem 1.1rem;
+  /* Per-segment card: gemara → rashi → tosafot */
+  .mseg {
     background: var(--gemara-bg);
     border: 1px solid var(--rule);
-    border-radius: 4px;
+    border-radius: 5px;
+    padding: 0.85rem 0.95rem;
     position: relative;
   }
-  .gemara-body::before {
-    content: "Gemara";
-    display: block;
+  .mseg-label {
     font-family: Georgia, serif;
-    font-size: 0.64rem;
+    font-size: 0.6rem;
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--muted);
-    text-align: center;
-    margin-bottom: 0.7rem;
-    padding-bottom: 0.5rem;
+    direction: ltr; text-align: right;
+    margin-bottom: 0.4rem;
+    padding-bottom: 0.35rem;
     border-bottom: 1px dotted var(--rule);
-    direction: ltr;
+  }
+  .mseg-gemara {
+    font-family: "Frank Ruhl Libre", "David", serif;
+    font-size: 1.18rem;
+    line-height: 1.85;
+    direction: rtl;
+    text-align: justify;
+    color: #111;
+    margin-bottom: 0.5rem;
+  }
+  .mseg-gemara .seg {
+    padding: 0.15rem 0.2rem;
+    margin: -0.15rem -0.2rem;
   }
 
-  /* Meforshim each as a full-width block with a centered column header */
-  .rashi-margin, .tosafot-margin {
-    float: none; width: auto;
-    margin: 0; padding: 1rem 1.1rem;
-    border: 1px solid var(--rule); border-radius: 4px;
+  /* Inset commentary blocks within each segment */
+  .mseg-comm {
+    margin-top: 0.65rem;
+    padding: 0.55rem 0.75rem 0.6rem;
     background: var(--mefaresh-bg);
+    border-radius: 4px;
+    border-left: 2px solid var(--accent);
   }
-  .rashi-margin { order: 2; }
-  .tosafot-margin { order: 3; }
-
-  .margin-label {
-    font-size: 0.68rem;
-    letter-spacing: 0.14em;
-    padding-bottom: 0.5rem;
-    margin-bottom: 0.8rem;
-    border-bottom: 1px dotted var(--rule);
-    text-align: center;
+  .mseg-tosafot { border-left: 2px solid #7a6055; }
+  .mseg-comm-label {
+    font-family: Georgia, serif;
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.4rem;
+    direction: ltr;
+    display: flex; align-items: baseline; gap: 0.5rem;
   }
-  .margin-label .he { font-size: 1.1rem; margin-top: 0.1rem; }
-
-  /* Diburim need more breathing room on mobile */
-  .dibur {
-    font-size: 1rem !important;
+  .mseg-comm-name { color: var(--accent); }
+  .mseg-comm-he {
+    font-family: "Frank Ruhl Libre", "David", serif;
+    direction: rtl;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .mseg-comm .dibur {
+    font-family: "Frank Ruhl Libre", "David", serif;
+    direction: rtl; text-align: right;
+    font-size: 0.98rem !important;
     line-height: 1.7;
-    padding: 0.5rem 0;
+    padding: 0.35rem 0;
     margin-bottom: 0;
+    border-top: none;
   }
-  .dibur + .dibur { padding-top: 0.5rem; }
+  .mseg-comm .dibur + .dibur {
+    border-top: 1px dotted var(--rule);
+    padding-top: 0.45rem;
+    margin-top: 0.25rem;
+  }
 }
 
 @media (max-width: 600px) {
