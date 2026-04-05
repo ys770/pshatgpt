@@ -128,7 +128,16 @@ async function fetchDaf(baseRef, commentators) {
 async function loadIndex() {
   const r = await fetch("shas.json");
   INDEX = await r.json();
-  const sel = $("#tractate-select");
+  // Populate both the header picker and the landing chooser.
+  populateTractateSelect($("#tractate-select"));
+  populateTractateSelect($("#landing-tractate"));
+  $("#tractate-select").value = "Bava Batra";
+  $("#landing-tractate").value = "Bava Batra";
+  updateDafHint();
+  updateLandingHint();
+}
+
+function populateTractateSelect(sel) {
   sel.innerHTML = "";
   for (const seder of INDEX.sederim) {
     const group = document.createElement("optgroup");
@@ -144,8 +153,6 @@ async function loadIndex() {
     }
     sel.appendChild(group);
   }
-  sel.value = "Bava Batra";
-  updateDafHint();
 }
 
 function currentTractate() {
@@ -512,9 +519,63 @@ document.addEventListener("keydown", e => {
   if (e.key === "Escape") { closeModal(); closeSettings(); }
 });
 
+// ---------- Landing screen ----------
+let landingAmud = "a";
+
+function getLandingTractate() {
+  const opt = $("#landing-tractate").selectedOptions[0];
+  if (!opt) return null;
+  return {
+    name: opt.value,
+    last_daf: parseInt(opt.dataset.lastDaf, 10),
+    last_amud: opt.dataset.lastAmud,
+    meforshim: JSON.parse(opt.dataset.meforshim),
+  };
+}
+
+function updateLandingHint() {
+  const t = getLandingTractate();
+  if (!t) return;
+  $("#landing-hint").textContent = `${t.name}: 2a – ${t.last_daf}${t.last_amud}`;
+  const inp = $("#landing-daf");
+  inp.max = t.last_daf;
+  if (!inp.value) inp.value = t.name === "Bava Batra" ? "33" : "2";
+}
+
+function setLandingAmud(amud) {
+  landingAmud = amud;
+  $$("[data-landing-amud]").forEach(b =>
+    b.classList.toggle("active", b.dataset.landingAmud === amud));
+}
+
+function beginFromLanding() {
+  const t = getLandingTractate();
+  if (!t) return;
+  let daf = parseInt($("#landing-daf").value, 10);
+  if (isNaN(daf) || daf < 2) daf = 2;
+  if (daf > t.last_daf) daf = t.last_daf;
+  let amud = landingAmud;
+  if (daf === t.last_daf && t.last_amud === "a" && amud === "b") amud = "a";
+  const ref = `${t.name} ${daf}${amud}`;
+  exitLanding();
+  loadDaf(ref, t.meforshim);
+}
+
+function exitLanding() {
+  $("#landing").classList.add("app-hidden");
+  $("#app-main").classList.remove("app-hidden");
+  $("#app-header").classList.remove("header-minimal");
+}
+
+$("#landing-tractate").addEventListener("change", updateLandingHint);
+$("#landing-daf").addEventListener("keydown", e => { if (e.key === "Enter") beginFromLanding(); });
+$("#landing-begin").addEventListener("click", beginFromLanding);
+$$("[data-landing-amud]").forEach(b =>
+  b.addEventListener("click", () => setLandingAmud(b.dataset.landingAmud)));
+$("#landing-settings-link").addEventListener("click", e => { e.preventDefault(); openSettings(); });
+
 // ---------- Init ----------
 (async () => {
   await loadIndex();
-  loadDaf("Bava Batra 33b");
-  if (!getApiKey()) setTimeout(openSettings, 500);
+  if (!getApiKey()) setTimeout(openSettings, 300);
 })();

@@ -24,6 +24,60 @@ header {
 header h1 { margin: 0; font-size: 1.4rem; color: var(--accent); }
 .logo-link { display: inline-flex; align-items: center; text-decoration: none; }
 .logo { height: 44px; width: auto; display: block; }
+
+/* Header modes: minimal (landing) vs full (daf loaded) */
+.header-minimal .header-picker { display: none; }
+
+/* Landing screen */
+#landing {
+  min-height: calc(100vh - 70px);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 4rem 1.5rem 2rem;
+}
+.landing-inner {
+  max-width: 520px; width: 100%; text-align: center;
+}
+.landing-logo { height: 90px; width: auto; margin: 0 auto 1.25rem; display: block; }
+.landing-tagline {
+  font-size: 1.02rem; line-height: 1.55; color: var(--muted);
+  margin: 0 0 2.2rem; padding: 0 0.5rem;
+}
+.landing-chooser {
+  background: var(--card); border: 1px solid var(--rule); border-radius: 6px;
+  padding: 1.5rem; text-align: left;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+}
+.chooser-field { margin-bottom: 1rem; }
+.chooser-field label {
+  display: block; font-size: 0.72rem; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--muted); font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+.chooser-field select, .chooser-field input {
+  width: 100%; padding: 0.55rem 0.7rem; border: 1px solid var(--rule); border-radius: 3px;
+  font-family: inherit; font-size: 0.95rem; background: var(--bg); color: var(--ink);
+}
+.chooser-field select:focus, .chooser-field input:focus {
+  outline: none; border-color: var(--accent);
+}
+.chooser-row { display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: end; }
+.chooser-row .chooser-field { margin-bottom: 0; }
+.landing-amud { height: 2.3rem; }
+.landing-amud .amud-btn { padding: 0.55rem 0.9rem; }
+.begin-btn {
+  width: 100%; margin-top: 1.2rem;
+  background: var(--accent); color: var(--card); border: none;
+  padding: 0.75rem 1rem; border-radius: 3px; cursor: pointer;
+  font-family: inherit; font-size: 1rem; font-weight: 600;
+  transition: filter 0.1s;
+}
+.begin-btn:hover { filter: brightness(1.08); }
+.landing-hint { margin: 0.5rem 0 0; font-size: 0.78rem; text-align: center; }
+.landing-footnote { margin-top: 1.5rem; font-size: 0.82rem; }
+.landing-footnote a { color: var(--accent); }
+
+/* Hide main when landing is visible */
+.app-hidden { display: none !important; }
 .icon-btn {
   background: transparent; border: 1px solid var(--rule); color: var(--ink);
   padding: 0.3rem 0.55rem; border-radius: 3px; cursor: pointer;

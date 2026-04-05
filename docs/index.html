@@ -8,12 +8,12 @@
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <header>
+  <header id="app-header" class="header-minimal">
     <a href="./" class="logo-link" aria-label="PshatGPT home">
       <img src="logo.svg" alt="PshatGPT" class="logo" />
     </a>
     <button id="settings-btn" class="icon-btn" aria-label="Settings">⚙</button>
-    <div id="picker">
+    <div id="picker" class="header-picker">
       <select id="tractate-select" aria-label="Tractate"></select>
       <input id="daf-number" type="number" min="2" placeholder="daf" aria-label="Daf number" />
       <div class="amud-toggle" role="radiogroup" aria-label="Amud">
@@ -25,7 +25,43 @@
     </div>
   </header>
 
-  <main>
+  <!-- Landing screen: shown first, hidden after first daf loaded -->
+  <section id="landing">
+    <div class="landing-inner">
+      <img src="logo.svg" alt="PshatGPT" class="landing-logo" />
+      <p class="landing-tagline">
+        AI-assisted tzuras hadaf. Click any line of gemara, Rashi/Rashbam, or Tosafot — get a contextual explanation.
+      </p>
+
+      <div class="landing-chooser">
+        <div class="chooser-field">
+          <label for="landing-tractate">Tractate</label>
+          <select id="landing-tractate"></select>
+        </div>
+        <div class="chooser-row">
+          <div class="chooser-field">
+            <label for="landing-daf">Daf</label>
+            <input id="landing-daf" type="number" min="2" placeholder="2" />
+          </div>
+          <div class="chooser-field">
+            <label>Amud</label>
+            <div class="amud-toggle landing-amud" role="radiogroup">
+              <button type="button" data-landing-amud="a" class="amud-btn active">a</button>
+              <button type="button" data-landing-amud="b" class="amud-btn">b</button>
+            </div>
+          </div>
+        </div>
+        <button id="landing-begin" class="begin-btn">Open daf →</button>
+        <p id="landing-hint" class="landing-hint muted"></p>
+      </div>
+
+      <p class="landing-footnote muted">
+        Enter your Anthropic API key in <a href="#" id="landing-settings-link">Settings</a> to enable explanations.
+      </p>
+    </div>
+  </section>
+
+  <main id="app-main" class="app-hidden">
     <div id="daf-header">
       <h2 id="daf-title">Loading…</h2>
     </div>
