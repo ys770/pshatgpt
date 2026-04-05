@@ -695,18 +695,59 @@ function escapeHtml(s) {
 }
 
 // ---------- Free-tier badge ----------
-function updateFreeTierBadge(remaining) {
+// Shows remaining daily explanations. Starts at 10 (assumed), updates after
+// each request based on the worker's x-pshatgpt-remaining header.
+// Persists in localStorage + resets at UTC midnight.
+const FREE_TIER_TOTAL = 10;
+const REMAINING_KEY = "pshatgpt_remaining";
+const REMAINING_DAY_KEY = "pshatgpt_remaining_day";
+
+function currentUtcDay() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getRemaining() {
+  const savedDay = localStorage.getItem(REMAINING_DAY_KEY);
+  if (savedDay !== currentUtcDay()) {
+    localStorage.removeItem(REMAINING_KEY);
+    localStorage.setItem(REMAINING_DAY_KEY, currentUtcDay());
+    return FREE_TIER_TOTAL;
+  }
+  const n = localStorage.getItem(REMAINING_KEY);
+  return n === null ? FREE_TIER_TOTAL : parseInt(n, 10);
+}
+
+function setRemaining(n) {
+  localStorage.setItem(REMAINING_KEY, String(n));
+  localStorage.setItem(REMAINING_DAY_KEY, currentUtcDay());
+  renderBadge();
+}
+
+function renderBadge() {
+  // Only show the badge when NOT using a personal key.
+  const hasKey = !!getApiKey();
   let badge = $("#free-tier-badge");
+  if (hasKey || !PROXY_URL) {
+    if (badge) badge.style.display = "none";
+    return;
+  }
   if (!badge) {
     badge = document.createElement("div");
     badge.id = "free-tier-badge";
     badge.className = "free-tier-badge";
+    badge.title = "Click to add your own API key for unlimited explanations";
+    badge.onclick = () => openSettings();
     document.body.appendChild(badge);
   }
-  badge.textContent = `Free tier: ${remaining} left today`;
-  badge.style.display = remaining >= 0 ? "block" : "none";
-  if (remaining <= 2) badge.classList.add("low");
-  else badge.classList.remove("low");
+  const rem = getRemaining();
+  badge.innerHTML = `<span class="badge-num">${rem}</span> / ${FREE_TIER_TOTAL} free explanations left today`;
+  badge.style.display = "block";
+  badge.classList.toggle("low", rem <= 2);
+  badge.classList.toggle("empty", rem <= 0);
+}
+
+function updateFreeTierBadge(remaining) {
+  setRemaining(remaining);
 }
 
 // ---------- Settings ----------
@@ -736,11 +777,13 @@ $("#api-key-save").onclick = () => {
   const v = $("#api-key-input").value.trim();
   if (v) localStorage.setItem(KEY_STORAGE, v);
   setApiKeyStatus();
+  renderBadge();
 };
 $("#api-key-clear").onclick = () => {
   localStorage.removeItem(KEY_STORAGE);
   $("#api-key-input").value = "";
   setApiKeyStatus();
+  renderBadge();
 };
 
 $("#load-btn").onclick = loadCurrentDaf;
@@ -860,6 +903,7 @@ $("#random-daf-btn").addEventListener("click", () => {
 (async () => {
   await loadIndex();
   renderTodayShortcuts();
+  renderBadge();
   // With a free-tier proxy, don't nag users for a key on first visit.
   // They can upgrade in Settings if/when they hit the limit.
   if (!getApiKey() && !PROXY_URL) setTimeout(openSettings, 300);
