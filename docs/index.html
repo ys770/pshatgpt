@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>PshatGPT</title>
 <link rel="icon" type="image/svg+xml" href="logo.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,800;1,9..144,400;1,9..144,600&family=Frank+Ruhl+Libre:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -25,139 +28,158 @@
     </div>
   </header>
 
-  <!-- Landing screen: shown first, hidden after first daf loaded -->
-  <section id="landing">
-    <div class="landing-watermark" aria-hidden="true">פְּשָׁט</div>
-    <div class="landing-inner">
-      <div class="landing-hero">
-        <div class="wordmark-wrap">
-          <div class="wordmark">
-            <span class="wordmark-he">פְּשָׁט</span>
-            <span class="wordmark-dot">·</span>
-            <span class="wordmark-en">GPT</span>
-          </div>
-          <span class="preview-badge">Preview</span>
-        </div>
-        <p class="landing-tagline">
-          Open a page of gemara. Click anything — a line, a Rashi, a Tosafot — and Claude will explain it in context.
-        </p>
+  <!-- Landing screen: editorial manuscript aesthetic -->
+  <section id="landing" class="ed-landing">
+    <div class="ed-grain" aria-hidden="true"></div>
+    <div class="ed-container">
 
-        <!-- Living product preview -->
-        <div class="hero-demo" aria-hidden="true">
-          <div class="demo-daf">
-            <aside class="demo-margin">
-              <div class="demo-margin-label">Rashbam</div>
-              <div class="demo-dibur"><b>כיון דאודי</b> — דשלא כדין החזיק עד עתה</div>
-              <div class="demo-dibur"><b>ומעולם לא מכרה</b> — הלכך צריך להביא ראיה</div>
-            </aside>
-            <div class="demo-gemara">
-              <span class="demo-seg">זֶה אוֹמֵר שֶׁל אֲבוֹתַי וְזֶה אוֹמֵר שֶׁל אֲבוֹתַי</span>
-              <span class="demo-seg demo-active">
-                הָהוּא דַּחֲטַף נְסָכָא מֵחַבְרֵיהּ
-                <span class="demo-ring"></span>
-                <span class="demo-cursor-label">you click</span>
-              </span>
-              <span class="demo-seg">אֲתָא לְקַמֵּיהּ דְּרַבִּי אַמֵּי</span>
-            </div>
-            <aside class="demo-margin">
-              <div class="demo-margin-label">Tosafot</div>
-              <div class="demo-dibur"><b>הוה יתיב רבי אבא</b> — משמע דר' אבא היה תלמידו של ר' אמי</div>
-            </aside>
+      <!-- HERO: asymmetric split, massive Hebrew display -->
+      <div class="ed-hero">
+        <div class="ed-hero-text">
+          <p class="ed-eyebrow">
+            <span class="ed-eyebrow-mark">¶</span>
+            <em>a tool for reading Talmud</em>
+            <span class="ed-preview-chip">Preview</span>
+          </p>
+          <h1 class="ed-lede">
+            Open any daf.<br>
+            <em>Click</em> any line, <em>any</em> Rashi, <em>any</em> Tosafot.<br>
+            Claude explains it in context.
+          </h1>
+          <p class="ed-subcopy">
+            Fifteen hundred years of commentary, arranged the way it always has been — and now responsive to your curiosity.
+          </p>
+        </div>
+        <div class="ed-hero-glyph" aria-hidden="true">
+          <div class="ed-glyph-he">פְּשָׁט</div>
+          <div class="ed-glyph-sub">
+            <span class="ed-glyph-dot">·</span>
+            <span class="ed-glyph-gpt">GPT</span>
           </div>
-          <div class="demo-arrow">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <path d="M6 16 L24 16 M18 10 L24 16 L18 22" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </div>
+      </div>
+
+      <!-- INLINE CHOOSER: typography-first, not a card -->
+      <div class="ed-chooser">
+        <div class="ed-chooser-row">
+          <label class="ed-inline-field">
+            <span class="ed-inline-label">tractate</span>
+            <select id="landing-tractate" class="ed-inline-select"></select>
+          </label>
+          <label class="ed-inline-field ed-inline-field-daf">
+            <span class="ed-inline-label">daf</span>
+            <input id="landing-daf" type="number" min="2" placeholder="2" class="ed-inline-input" />
+          </label>
+          <div class="ed-inline-field">
+            <span class="ed-inline-label">amud</span>
+            <div class="ed-amud" role="radiogroup">
+              <button type="button" data-landing-amud="a" class="ed-amud-btn active">a</button>
+              <button type="button" data-landing-amud="b" class="ed-amud-btn">b</button>
+            </div>
+          </div>
+        </div>
+        <div class="ed-chooser-actions">
+          <button id="landing-begin" class="ed-cta">
+            <span>Open the daf</span>
+            <svg class="ed-cta-arrow" width="28" height="14" viewBox="0 0 28 14" fill="none">
+              <path d="M0 7 L26 7 M20 1 L26 7 L20 13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-          </div>
-          <div class="demo-explain">
-            <div class="demo-explain-header">
-              <span class="demo-explain-tag">streaming</span>
-              <span class="demo-explain-ref">Bava Batra 33b:8</span>
-            </div>
-            <div class="demo-explain-body">
-              <p><strong>The gemara tells a story:</strong> a certain man snatched a piece of cast silver (<em>naskha</em>) from another. The one from whom it was taken came before Rabbi Ami, with Rabbi Abba sitting in front of him, and brought one witness who saw the seizure…<span class="demo-typing-cursor"></span></p>
-            </div>
-          </div>
+          </button>
+          <button id="random-daf-btn" class="ed-link-btn" title="Jump to a random daf">
+            <span class="ed-random-icon">⟳</span><span>random</span>
+          </button>
+          <span id="landing-hint" class="ed-hint"></span>
         </div>
       </div>
 
-      <div class="landing-chooser">
-        <div class="chooser-label">Begin with</div>
-        <div class="chooser-grid">
-          <div class="chooser-field chooser-tractate">
-            <label for="landing-tractate">Tractate</label>
-            <select id="landing-tractate"></select>
-          </div>
-          <div class="chooser-field">
-            <label for="landing-daf">Daf</label>
-            <input id="landing-daf" type="number" min="2" placeholder="2" />
-          </div>
-          <div class="chooser-field">
-            <label>Amud</label>
-            <div class="amud-toggle landing-amud" role="radiogroup">
-              <button type="button" data-landing-amud="a" class="amud-btn active">a</button>
-              <button type="button" data-landing-amud="b" class="amud-btn">b</button>
+      <hr class="ed-rule" />
+
+      <!-- FEATURED SUGYOT: editorial numbered list -->
+      <section class="ed-section">
+        <h2 class="ed-section-title">
+          <span class="ed-section-num">§</span>
+          Featured sugyot
+        </h2>
+        <ol class="ed-featured">
+          <li class="ed-feature" data-ref="Bava Batra 33b">
+            <div class="ed-feature-num">01</div>
+            <div class="ed-feature-body">
+              <div class="ed-feature-he">נסכא דרבי אבא</div>
+              <h3 class="ed-feature-title">Nesikha d'Rabbi Abba</h3>
+              <p class="ed-feature-note">A witness saw the seizure. The defendant admits the grab but claims the silver was his. A three-way legal bind — and Rabbi Abba's resolution.</p>
             </div>
-          </div>
-        </div>
-        <p id="landing-hint" class="landing-hint muted"></p>
-        <div class="chooser-actions">
-          <button id="landing-begin" class="begin-btn">Open daf →</button>
-          <button id="random-daf-btn" class="random-btn" title="Jump to a random daf">
-            <span class="random-icon">⟳</span> Random
-          </button>
-        </div>
-      </div>
-
-      <div class="featured-section">
-        <div class="featured-label">Or try a sugya</div>
-        <div class="featured-grid">
-          <button class="featured-card" data-ref="Bava Batra 33b">
-            <div class="featured-card-he">נסכא דרבי אבא</div>
-            <div class="featured-card-name">Nesikha d'Rabbi Abba</div>
-            <div class="featured-card-ref">Bava Batra 33b</div>
-            <div class="featured-card-note">A witness, a seized silver lump, and a three-way legal bind.</div>
-          </button>
-          <button class="featured-card" data-ref="Bava Metzia 2a">
-            <div class="featured-card-he">שנים אוחזין</div>
-            <div class="featured-card-name">Shnayim Ochzin</div>
-            <div class="featured-card-ref">Bava Metzia 2a</div>
-            <div class="featured-card-note">Two people grabbing a tallis. The opening sugya of Bava Metzia.</div>
-          </button>
-          <button class="featured-card" data-ref="Berakhot 2a">
-            <div class="featured-card-he">מאימתי קורין</div>
-            <div class="featured-card-name">Me'eimatai Korin</div>
-            <div class="featured-card-ref">Berakhot 2a</div>
-            <div class="featured-card-note">From what time may one recite Shema? The very first Mishnah.</div>
-          </button>
-        </div>
-      </div>
-
-      <section class="roadmap">
-        <div class="roadmap-label">Coming soon</div>
-        <ul class="roadmap-list">
-          <li>
-            <span class="roadmap-title">Deeper pshat-style reasoning</span>
-            <span class="roadmap-note">Explanations tuned to read the text the way a rebbi would: context-aware, sugya-aware, and faithful to the classical meforshim.</span>
+            <div class="ed-feature-meta">
+              <span class="ed-feature-ref">Bava Batra 33b</span>
+              <svg class="ed-feature-arrow" width="22" height="12" viewBox="0 0 22 12" fill="none">
+                <path d="M0 6 L20 6 M15 1 L20 6 L15 11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
           </li>
-          <li>
-            <span class="roadmap-title">Authentic tzuras hadaf</span>
-            <span class="roadmap-note">True Vilna-style page layout with the gemara wrapping around Rashi and Tosafot — not just a 3-column approximation.</span>
+          <li class="ed-feature" data-ref="Bava Metzia 2a">
+            <div class="ed-feature-num">02</div>
+            <div class="ed-feature-body">
+              <div class="ed-feature-he">שנים אוחזין בטלית</div>
+              <h3 class="ed-feature-title">Shnayim Ochzin</h3>
+              <p class="ed-feature-note">Two people grabbing a tallis, each claiming it all. The opening Mishnah of Bava Metzia, and the framework for all disputes that follow.</p>
+            </div>
+            <div class="ed-feature-meta">
+              <span class="ed-feature-ref">Bava Metzia 2a</span>
+              <svg class="ed-feature-arrow" width="22" height="12" viewBox="0 0 22 12" fill="none">
+                <path d="M0 6 L20 6 M15 1 L20 6 L15 11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
           </li>
-          <li>
-            <span class="roadmap-title">Cross-sugya navigation</span>
-            <span class="roadmap-note">Click a reference inside an explanation and jump to that daf.</span>
+          <li class="ed-feature" data-ref="Berakhot 2a">
+            <div class="ed-feature-num">03</div>
+            <div class="ed-feature-body">
+              <div class="ed-feature-he">מאימתי קורין את שמע</div>
+              <h3 class="ed-feature-title">Me'eimatai Korin</h3>
+              <p class="ed-feature-note">From when may one recite the evening Shema? The Mishnah that opens the entire Shas — and still gets argued about.</p>
+            </div>
+            <div class="ed-feature-meta">
+              <span class="ed-feature-ref">Berakhot 2a</span>
+              <svg class="ed-feature-arrow" width="22" height="12" viewBox="0 0 22 12" fill="none">
+                <path d="M0 6 L20 6 M15 1 L20 6 L15 11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
           </li>
-        </ul>
-        <p class="roadmap-footnote muted">
-          This is a preview. Some future features may require a paid tier.
-        </p>
+        </ol>
       </section>
 
-      <p class="landing-footnote muted">
-        No API key yet? <a href="#" id="landing-settings-link">Open Settings</a> to add one.
-        Your key lives only in this browser.
-      </p>
+      <hr class="ed-rule" />
+
+      <!-- COMING SOON -->
+      <section class="ed-section">
+        <h2 class="ed-section-title">
+          <span class="ed-section-num">§</span>
+          Coming soon
+        </h2>
+        <dl class="ed-roadmap">
+          <div class="ed-roadmap-item">
+            <dt>Deeper pshat reasoning</dt>
+            <dd>Explanations tuned to read the text the way a rebbi would — context-aware, sugya-aware, faithful to the classical meforshim.</dd>
+          </div>
+          <div class="ed-roadmap-item">
+            <dt>Authentic tzuras hadaf</dt>
+            <dd>True Vilna-style page layout, with the gemara wrapping around Rashi and Tosafot rather than a three-column approximation.</dd>
+          </div>
+          <div class="ed-roadmap-item">
+            <dt>Cross-sugya navigation</dt>
+            <dd>Click a reference inside any explanation and jump straight to that daf.</dd>
+          </div>
+        </dl>
+      </section>
+
+      <footer class="ed-footer">
+        <div class="ed-footer-left">
+          <span class="ed-footer-mark">※</span>
+          Preview. Some future features may be paid.
+        </div>
+        <div class="ed-footer-right">
+          No API key? <a href="#" id="landing-settings-link">Open Settings</a>. Keys live only in your browser.
+        </div>
+      </footer>
+
     </div>
   </section>
 
