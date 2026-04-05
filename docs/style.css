@@ -1424,15 +1424,26 @@ main { max-width: 1400px; margin: 0 auto; padding: 2rem; }
   50%      { box-shadow: 0 0 0 5px rgba(74, 42, 58, 0); }
 }
 .modal-ref { font-size: 0.85rem; color: var(--muted); font-family: monospace; }
-.modal-header-actions { display: flex; gap: 0.25rem; align-items: center; }
+.modal-header-actions { display: flex; gap: 0.3rem; align-items: center; }
 .modal-close, .modal-minimize {
-  background: transparent; border: none; color: var(--muted);
-  line-height: 1; cursor: pointer; padding: 0 0.3rem;
-  font-family: inherit;
+  background: transparent; border: 1px solid transparent;
+  color: var(--muted);
+  line-height: 1; cursor: pointer;
+  font-family: inherit; border-radius: 3px;
+  transition: all 0.12s;
+  display: flex; align-items: center; justify-content: center;
 }
-.modal-close { font-size: 1.6rem; }
-.modal-minimize { font-size: 1.9rem; font-weight: 600; padding-bottom: 0.2rem; }
-.modal-close:hover, .modal-minimize:hover { color: var(--accent); }
+.modal-close { font-size: 1.5rem; width: 32px; height: 32px; }
+.modal-minimize {
+  font-size: 1.5rem; font-weight: 700;
+  width: 32px; height: 32px; padding-bottom: 5px;
+}
+.modal-close:hover, .modal-minimize:hover {
+  color: var(--accent);
+  background: var(--bg);
+  border-color: var(--rule);
+}
+.modal-minimize::after { content: ""; } /* prevents hyphen clipping */
 
 /* Minimized pill — floats bottom-left while stream keeps running */
 .minimized-hidden { display: none !important; }

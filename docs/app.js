@@ -1987,7 +1987,13 @@ $("#minimized-pill").querySelector(".pill-close").addEventListener("click", (e) 
   closeModal();
 });
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape") { closeModal(); closeSettings(); }
+  if (e.key === "Escape") {
+    if (!$("#modal").classList.contains("modal-hidden")) {
+      // ESC minimizes the explain modal (preserves state)
+      minimizeModal();
+    }
+    closeSettings();
+  }
 });
 
 // Follow-up form
