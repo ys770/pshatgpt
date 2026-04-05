@@ -28,56 +28,210 @@ header h1 { margin: 0; font-size: 1.4rem; color: var(--accent); }
 /* Header modes: minimal (landing) vs full (daf loaded) */
 .header-minimal .header-picker { display: none; }
 
-/* Landing screen */
+/* ─────────────────────────────────────────────────────────
+   LANDING SCREEN — "You are opening a page of gemara"
+   ───────────────────────────────────────────────────────── */
 #landing {
+  position: relative;
   min-height: calc(100vh - 70px);
-  display: flex; align-items: flex-start; justify-content: center;
-  padding: 4rem 1.5rem 2rem;
+  padding: 3rem 1.5rem 4rem;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 800px 400px at 50% -10%, rgba(122,59,46,0.08), transparent 70%),
+    radial-gradient(ellipse 600px 300px at 80% 100%, rgba(122,59,46,0.05), transparent 70%);
 }
+
+/* Ghostly Hebrew watermark behind everything */
+.landing-watermark {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: "Frank Ruhl Libre", "SBL Hebrew", "David", serif;
+  font-size: clamp(12rem, 42vw, 38rem);
+  font-weight: 900;
+  color: rgba(122, 59, 46, 0.04);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+  direction: rtl;
+  z-index: 0;
+  letter-spacing: -0.05em;
+}
+
 .landing-inner {
-  max-width: 520px; width: 100%; text-align: center;
+  position: relative;
+  z-index: 1;
+  max-width: 960px;
+  margin: 0 auto;
+  animation: landingFade 0.6s ease-out;
 }
-.landing-logo { height: 90px; width: auto; margin: 0 auto 1.25rem; display: block; }
+@keyframes landingFade {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hero: big wordmark + tagline */
+.landing-hero { text-align: center; margin-bottom: 3rem; }
+.wordmark {
+  font-family: "Frank Ruhl Libre", "David", Georgia, serif;
+  font-weight: 700;
+  font-size: clamp(3.5rem, 9vw, 6rem);
+  line-height: 1;
+  color: var(--accent);
+  letter-spacing: -0.01em;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.15em;
+}
+.wordmark-he { direction: rtl; }
+.wordmark-dot { color: var(--muted); font-weight: 400; margin: 0 0.08em; }
+.wordmark-en {
+  font-family: Georgia, "Iowan Old Style", serif;
+  font-size: 0.55em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--ink);
+  text-transform: uppercase;
+}
 .landing-tagline {
-  font-size: 1.02rem; line-height: 1.55; color: var(--muted);
-  margin: 0 0 2.2rem; padding: 0 0.5rem;
+  font-size: clamp(1rem, 1.6vw, 1.18rem);
+  line-height: 1.55;
+  color: var(--muted);
+  margin: 1.2rem auto 0;
+  max-width: 560px;
 }
+
+/* Chooser card */
 .landing-chooser {
-  background: var(--card); border: 1px solid var(--rule); border-radius: 6px;
-  padding: 1.5rem; text-align: left;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 1.75rem 1.75rem 1.5rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05), 0 1px 0 rgba(255,255,255,0.5) inset;
+  max-width: 640px;
+  margin: 0 auto;
 }
-.chooser-field { margin-bottom: 1rem; }
+.chooser-label {
+  font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); font-weight: 700; margin-bottom: 1rem;
+}
+.chooser-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr auto;
+  gap: 0.9rem;
+  align-items: end;
+}
 .chooser-field label {
-  display: block; font-size: 0.72rem; letter-spacing: 0.08em;
+  display: block; font-size: 0.7rem; letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--muted); font-weight: 600;
   margin-bottom: 0.35rem;
 }
 .chooser-field select, .chooser-field input {
-  width: 100%; padding: 0.55rem 0.7rem; border: 1px solid var(--rule); border-radius: 3px;
+  width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--rule); border-radius: 4px;
   font-family: inherit; font-size: 0.95rem; background: var(--bg); color: var(--ink);
+  transition: border-color 0.12s;
 }
 .chooser-field select:focus, .chooser-field input:focus {
   outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(122, 59, 46, 0.12);
 }
-.chooser-row { display: grid; grid-template-columns: 1fr auto; gap: 0.75rem; align-items: end; }
-.chooser-row .chooser-field { margin-bottom: 0; }
-.landing-amud { height: 2.3rem; }
-.landing-amud .amud-btn { padding: 0.55rem 0.9rem; }
+.landing-amud { height: 2.45rem; }
+.landing-amud .amud-btn { padding: 0.6rem 0.95rem; }
+
+.landing-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.78rem;
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+
+.chooser-actions { display: flex; gap: 0.7rem; margin-top: 1.25rem; }
 .begin-btn {
-  width: 100%; margin-top: 1.2rem;
+  flex: 1;
   background: var(--accent); color: var(--card); border: none;
-  padding: 0.75rem 1rem; border-radius: 3px; cursor: pointer;
+  padding: 0.85rem 1.2rem; border-radius: 4px; cursor: pointer;
   font-family: inherit; font-size: 1rem; font-weight: 600;
-  transition: filter 0.1s;
+  transition: all 0.12s;
+  box-shadow: 0 2px 0 rgba(0,0,0,0.1);
 }
-.begin-btn:hover { filter: brightness(1.08); }
-.landing-hint { margin: 0.5rem 0 0; font-size: 0.78rem; text-align: center; }
-.landing-footnote { margin-top: 1.5rem; font-size: 0.82rem; }
+.begin-btn:hover { filter: brightness(1.1); transform: translateY(-1px); box-shadow: 0 3px 0 rgba(0,0,0,0.12); }
+.begin-btn:active { transform: translateY(0); box-shadow: 0 1px 0 rgba(0,0,0,0.1); }
+.random-btn {
+  background: transparent; color: var(--ink);
+  border: 1px solid var(--rule);
+  padding: 0.85rem 1.1rem; border-radius: 4px; cursor: pointer;
+  font-family: inherit; font-size: 0.9rem;
+  transition: all 0.12s;
+  display: inline-flex; align-items: center; gap: 0.4rem;
+}
+.random-btn:hover { background: var(--hover); border-color: var(--accent); }
+.random-icon { display: inline-block; transition: transform 0.3s; }
+.random-btn:hover .random-icon { transform: rotate(180deg); }
+
+/* Featured sugyot section */
+.featured-section { margin-top: 3rem; }
+.featured-label {
+  font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); font-weight: 700; text-align: center;
+  margin-bottom: 1.25rem;
+}
+.featured-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  max-width: 900px; margin: 0 auto;
+}
+.featured-card {
+  background: var(--card);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 1.1rem 1.2rem 1.2rem;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: all 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.featured-card::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  transform: scaleX(0); transform-origin: left; transition: transform 0.25s;
+}
+.featured-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+.featured-card:hover::before { transform: scaleX(1); }
+.featured-card-he {
+  font-family: "Frank Ruhl Libre", "David", serif;
+  direction: rtl; text-align: right;
+  font-size: 1.25rem; font-weight: 700; color: var(--accent);
+  margin-bottom: 0.15rem;
+}
+.featured-card-name {
+  font-size: 0.95rem; font-weight: 600; color: var(--ink);
+  margin-bottom: 0.15rem;
+}
+.featured-card-ref {
+  font-size: 0.73rem; color: var(--muted); letter-spacing: 0.04em;
+  text-transform: uppercase; font-weight: 600; margin-bottom: 0.6rem;
+}
+.featured-card-note { font-size: 0.85rem; line-height: 1.45; color: var(--muted); }
+
+.landing-footnote {
+  margin-top: 2.5rem; font-size: 0.82rem; text-align: center;
+}
 .landing-footnote a { color: var(--accent); }
 
 /* Hide main when landing is visible */
 .app-hidden { display: none !important; }
+
+@media (max-width: 640px) {
+  .chooser-grid { grid-template-columns: 1fr; }
+  .chooser-actions { flex-direction: column; }
+}
 .icon-btn {
   background: transparent; border: 1px solid var(--rule); color: var(--ink);
   padding: 0.3rem 0.55rem; border-radius: 3px; cursor: pointer;

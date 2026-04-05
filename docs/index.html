@@ -27,18 +27,26 @@
 
   <!-- Landing screen: shown first, hidden after first daf loaded -->
   <section id="landing">
+    <div class="landing-watermark" aria-hidden="true">פְּשָׁט</div>
     <div class="landing-inner">
-      <img src="logo.svg" alt="PshatGPT" class="landing-logo" />
-      <p class="landing-tagline">
-        AI-assisted tzuras hadaf. Click any line of gemara, Rashi/Rashbam, or Tosafot — get a contextual explanation.
-      </p>
+      <div class="landing-hero">
+        <div class="wordmark">
+          <span class="wordmark-he">פְּשָׁט</span>
+          <span class="wordmark-dot">·</span>
+          <span class="wordmark-en">GPT</span>
+        </div>
+        <p class="landing-tagline">
+          Open a page of gemara. Click anything — a line, a Rashi, a Tosafot — and Claude will explain it in context.
+        </p>
+      </div>
 
       <div class="landing-chooser">
-        <div class="chooser-field">
-          <label for="landing-tractate">Tractate</label>
-          <select id="landing-tractate"></select>
-        </div>
-        <div class="chooser-row">
+        <div class="chooser-label">Begin with</div>
+        <div class="chooser-grid">
+          <div class="chooser-field chooser-tractate">
+            <label for="landing-tractate">Tractate</label>
+            <select id="landing-tractate"></select>
+          </div>
           <div class="chooser-field">
             <label for="landing-daf">Daf</label>
             <input id="landing-daf" type="number" min="2" placeholder="2" />
@@ -51,12 +59,42 @@
             </div>
           </div>
         </div>
-        <button id="landing-begin" class="begin-btn">Open daf →</button>
         <p id="landing-hint" class="landing-hint muted"></p>
+        <div class="chooser-actions">
+          <button id="landing-begin" class="begin-btn">Open daf →</button>
+          <button id="random-daf-btn" class="random-btn" title="Jump to a random daf">
+            <span class="random-icon">⟳</span> Random
+          </button>
+        </div>
+      </div>
+
+      <div class="featured-section">
+        <div class="featured-label">Or try a sugya</div>
+        <div class="featured-grid">
+          <button class="featured-card" data-ref="Bava Batra 33b">
+            <div class="featured-card-he">נסכא דרבי אבא</div>
+            <div class="featured-card-name">Nesikha d'Rabbi Abba</div>
+            <div class="featured-card-ref">Bava Batra 33b</div>
+            <div class="featured-card-note">A witness, a seized silver lump, and a three-way legal bind.</div>
+          </button>
+          <button class="featured-card" data-ref="Bava Metzia 2a">
+            <div class="featured-card-he">שנים אוחזין</div>
+            <div class="featured-card-name">Shnayim Ochzin</div>
+            <div class="featured-card-ref">Bava Metzia 2a</div>
+            <div class="featured-card-note">Two people grabbing a tallis. The opening sugya of Bava Metzia.</div>
+          </button>
+          <button class="featured-card" data-ref="Berakhot 2a">
+            <div class="featured-card-he">מאימתי קורין</div>
+            <div class="featured-card-name">Me'eimatai Korin</div>
+            <div class="featured-card-ref">Berakhot 2a</div>
+            <div class="featured-card-note">From what time may one recite Shema? The very first Mishnah.</div>
+          </button>
+        </div>
       </div>
 
       <p class="landing-footnote muted">
-        Enter your Anthropic API key in <a href="#" id="landing-settings-link">Settings</a> to enable explanations.
+        No API key yet? <a href="#" id="landing-settings-link">Open Settings</a> to add one.
+        Your key lives only in this browser.
       </p>
     </div>
   </section>
