@@ -2,6 +2,142 @@
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => document.querySelectorAll(sel);
 
+// ────────────────────────────────────────────────────────
+// Daily learning cycles — computed client-side (deterministic)
+// ────────────────────────────────────────────────────────
+
+// Daf Yomi Bavli — Cycle 14 began 2020-01-05 with Berakhot 2a.
+// "dafim" = number of daily slots in that masechta (daf 2 through last).
+// Names match our Sefaria refs; Shekalim is Yerushalmi (notInApp).
+const DAF_YOMI_MASECHTOS = [
+  { name: "Berakhot", dafim: 63 },
+  { name: "Shabbat", dafim: 156 },
+  { name: "Eruvin", dafim: 104 },
+  { name: "Pesachim", dafim: 120 },
+  { name: "Shekalim", dafim: 21, notInApp: true },
+  { name: "Yoma", dafim: 87 },
+  { name: "Sukkah", dafim: 55 },
+  { name: "Beitzah", dafim: 39 },
+  { name: "Rosh Hashanah", dafim: 34 },
+  { name: "Taanit", dafim: 30 },
+  { name: "Megillah", dafim: 31 },
+  { name: "Moed Katan", dafim: 28 },
+  { name: "Chagigah", dafim: 26 },
+  { name: "Yevamot", dafim: 121 },
+  { name: "Ketubot", dafim: 111 },
+  { name: "Nedarim", dafim: 90 },
+  { name: "Nazir", dafim: 65 },
+  { name: "Sotah", dafim: 48 },
+  { name: "Gittin", dafim: 89 },
+  { name: "Kiddushin", dafim: 81 },
+  { name: "Bava Kamma", dafim: 118 },
+  { name: "Bava Metzia", dafim: 118 },
+  { name: "Bava Batra", dafim: 175 },
+  { name: "Sanhedrin", dafim: 112 },
+  { name: "Makkot", dafim: 23 },
+  { name: "Shevuot", dafim: 48 },
+  { name: "Avodah Zarah", dafim: 75 },
+  { name: "Horayot", dafim: 13 },
+  { name: "Zevachim", dafim: 119 },
+  { name: "Menachot", dafim: 109 },
+  { name: "Chullin", dafim: 141 },
+  { name: "Bekhorot", dafim: 60 },
+  { name: "Arakhin", dafim: 33 },
+  { name: "Temurah", dafim: 33 },
+  { name: "Keritot", dafim: 27 },
+  { name: "Meilah", dafim: 36 },
+  { name: "Niddah", dafim: 72 },
+];
+const DAF_YOMI_CYCLE_START = new Date("2020-01-05T00:00:00");
+
+function daysBetween(a, b) {
+  const msPerDay = 86400000;
+  const d1 = new Date(a); d1.setHours(0,0,0,0);
+  const d2 = new Date(b); d2.setHours(0,0,0,0);
+  return Math.floor((d2 - d1) / msPerDay);
+}
+
+function dafYomiToday() {
+  const elapsed = daysBetween(DAF_YOMI_CYCLE_START, new Date());
+  const total = DAF_YOMI_MASECHTOS.reduce((s, m) => s + m.dafim, 0);
+  const idx = ((elapsed % total) + total) % total;
+  let cum = 0;
+  for (const m of DAF_YOMI_MASECHTOS) {
+    if (idx < cum + m.dafim) {
+      const daf = 2 + (idx - cum);
+      return {
+        masechta: m.name,
+        daf,
+        ref: `${m.name} ${daf}a`,
+        notInApp: !!m.notInApp,
+      };
+    }
+    cum += m.dafim;
+  }
+  return null;
+}
+
+// Chabad/Lubavitcher minhag: one daf of Sotah per day of Sefiras HaOmer.
+// Day N of sefirah → Sotah daf N (with day 1 starting at daf 2).
+// Dates are hardcoded per year window; add more as needed.
+const SEFIRAH_WINDOWS = [
+  { year: 5786, start: "2026-04-03", end: "2026-05-21" }, // Pesach II → Erev Shavuos
+  { year: 5787, start: "2027-04-22", end: "2027-06-10" },
+];
+
+function sefirahSotahToday() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  for (const w of SEFIRAH_WINDOWS) {
+    const start = new Date(w.start + "T00:00:00");
+    const end = new Date(w.end + "T23:59:59");
+    if (today < start || today > end) continue;
+    const dayNum = daysBetween(start, today) + 1;  // 1..49
+    const daf = Math.max(dayNum, 2);                // day 1 → daf 2
+    return {
+      day: dayNum,
+      totalDays: 49,
+      daf,
+      ref: `Sotah ${daf}a`,
+    };
+  }
+  return null;
+}
+
+// Render the "Today" shortcut strip into the landing.
+function renderTodayShortcuts() {
+  const container = $("#today-shortcuts");
+  if (!container) return;
+  container.innerHTML = "";
+
+  const dy = dafYomiToday();
+  if (dy) {
+    const card = document.createElement("button");
+    card.className = "ed-today-card";
+    card.dataset.ref = dy.notInApp ? "" : dy.ref;
+    if (dy.notInApp) card.classList.add("ed-today-disabled");
+    card.innerHTML = `
+      <div class="ed-today-tag">Daf Yomi</div>
+      <div class="ed-today-main">${escapeHtml(dy.masechta)} <span class="ed-today-daf">${dy.daf}a</span></div>
+      <div class="ed-today-meta">${dy.notInApp ? "Yerushalmi — open on Sefaria" : "open today's daf"} →</div>
+    `;
+    container.appendChild(card);
+  }
+
+  const ss = sefirahSotahToday();
+  if (ss) {
+    const card = document.createElement("button");
+    card.className = "ed-today-card";
+    card.dataset.ref = ss.ref;
+    card.innerHTML = `
+      <div class="ed-today-tag">Sefirah · Sotah <span class="ed-today-day">day ${ss.day}/${ss.totalDays}</span></div>
+      <div class="ed-today-main">Sotah <span class="ed-today-daf">${ss.daf}a</span></div>
+      <div class="ed-today-meta">open today's daf →</div>
+    `;
+    container.appendChild(card);
+  }
+}
+
 const SEFARIA = "https://www.sefaria.org/api/v3/texts";
 const SEFARIA_RELATED = "https://www.sefaria.org/api/related";
 const ANTHROPIC = "https://api.anthropic.com/v1/messages";
@@ -192,6 +328,7 @@ async function loadDaf(ref, meforshim) {
   $("#daf-title").textContent = "Loading…";
   $("#daf").innerHTML = "";
   syncPickerToRef(ref);
+  updateDafNav(ref);
   try {
     // Figure out meforshim if not passed.
     if (!meforshim) {
@@ -204,6 +341,46 @@ async function loadDaf(ref, meforshim) {
   } catch (e) {
     $("#daf-title").textContent = `Error: ${e.message}`;
   }
+}
+
+// Prev/next navigation within a masechta.
+function neighborRef(ref, direction) {
+  const m = ref.match(/^(.+?)\s+(\d+)([ab])$/);
+  if (!m) return null;
+  const tractate = m[1];
+  let daf = parseInt(m[2], 10);
+  let amud = m[3];
+  // Look up tractate bounds.
+  if (!INDEX) return null;
+  let tractateInfo = null;
+  for (const s of INDEX.sederim) {
+    tractateInfo = s.tractates.find(t => t.name === tractate);
+    if (tractateInfo) break;
+  }
+  if (!tractateInfo) return null;
+  if (direction === "next") {
+    if (amud === "a") amud = "b";
+    else { daf += 1; amud = "a"; }
+  } else {
+    if (amud === "b") amud = "a";
+    else { daf -= 1; amud = "b"; }
+  }
+  // Clamp to valid range: daf 2a through last_daf + last_amud.
+  if (daf < 2) return null;
+  if (daf > tractateInfo.last_daf) return null;
+  if (daf === tractateInfo.last_daf && tractateInfo.last_amud === "a" && amud === "b") return null;
+  return { ref: `${tractate} ${daf}${amud}`, meforshim: tractateInfo.meforshim };
+}
+
+function updateDafNav(ref) {
+  const prev = neighborRef(ref, "prev");
+  const next = neighborRef(ref, "next");
+  const prevBtn = $("#daf-prev");
+  const nextBtn = $("#daf-next");
+  if (prevBtn) prevBtn.disabled = !prev;
+  if (nextBtn) nextBtn.disabled = !next;
+  if (prevBtn) prevBtn.dataset.target = prev ? prev.ref : "";
+  if (nextBtn) nextBtn.dataset.target = next ? next.ref : "";
 }
 
 function syncPickerToRef(ref) {
@@ -509,6 +686,21 @@ $("#api-key-clear").onclick = () => {
 };
 
 $("#load-btn").onclick = loadCurrentDaf;
+$("#daf-prev").onclick = () => {
+  const t = $("#daf-prev").dataset.target;
+  if (t) loadDaf(t);
+};
+$("#daf-next").onclick = () => {
+  const t = $("#daf-next").dataset.target;
+  if (t) loadDaf(t);
+};
+// Keyboard shortcuts for prev/next when the daf is showing
+document.addEventListener("keydown", (e) => {
+  if ($("#app-main").classList.contains("app-hidden")) return;
+  if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+  if (e.key === "ArrowLeft" || e.key === "j") $("#daf-prev").click();
+  else if (e.key === "ArrowRight" || e.key === "k") $("#daf-next").click();
+});
 $("#tractate-select").addEventListener("change", () => { updateDafHint(); loadCurrentDaf(); });
 $("#daf-number").addEventListener("keydown", e => { if (e.key === "Enter") loadCurrentDaf(); });
 $$(".amud-btn").forEach(b => {
@@ -574,13 +766,13 @@ $$("[data-landing-amud]").forEach(b =>
   b.addEventListener("click", () => setLandingAmud(b.dataset.landingAmud)));
 $("#landing-settings-link").addEventListener("click", e => { e.preventDefault(); openSettings(); });
 
-// Featured sugya items — event delegation on the landing section so
-// it survives any DOM re-render of the featured list.
+// Featured sugya items + Today shortcuts — event delegation.
 document.addEventListener("click", (e) => {
   const el = e.target.closest("[data-ref]");
   if (!el) return;
-  // Only handle landing-level feature rows, not gemara segments.
-  if (!el.classList.contains("ed-feature") && !el.classList.contains("featured-card")) return;
+  const isFeature = el.classList.contains("ed-feature") || el.classList.contains("featured-card");
+  const isTodayCard = el.classList.contains("ed-today-card") && !el.classList.contains("ed-today-disabled");
+  if (!isFeature && !isTodayCard) return;
   const ref = el.dataset.ref;
   if (!ref || !INDEX) return;
   const m = ref.match(/^(.+?)\s+(\d+)([ab])$/);
@@ -611,5 +803,6 @@ $("#random-daf-btn").addEventListener("click", () => {
 // ---------- Init ----------
 (async () => {
   await loadIndex();
+  renderTodayShortcuts();
   if (!getApiKey()) setTimeout(openSettings, 300);
 })();

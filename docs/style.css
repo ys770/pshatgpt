@@ -164,6 +164,83 @@ header h1 { margin: 0; font-size: 1.4rem; color: var(--accent); }
   100% { opacity: 1; transform: translateY(0); }
 }
 
+/* ─── TODAY SHORTCUTS ─────────────────── */
+.ed-today {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1px;
+  margin-bottom: 2.5rem;
+  background: var(--ed-rule);
+  border: 1px solid var(--ed-rule);
+  animation: edHeroRise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) 0.2s both;
+}
+.ed-today-card {
+  background: var(--ed-bg);
+  border: none;
+  padding: 1rem 1.25rem;
+  font-family: 'Fraunces', serif;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s;
+  color: var(--ed-ivory);
+  position: relative;
+  overflow: hidden;
+}
+.ed-today-card:hover {
+  background: var(--ed-surface);
+}
+.ed-today-card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 2px;
+  background: var(--ed-brass);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.ed-today-card:hover::before { transform: scaleY(1); }
+.ed-today-card.ed-today-disabled { cursor: not-allowed; opacity: 0.55; }
+.ed-today-card.ed-today-disabled:hover { background: var(--ed-bg); }
+
+.ed-today-tag {
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ed-brass);
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ed-today-day {
+  text-transform: none;
+  letter-spacing: 0;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--ed-warm-muted);
+  font-size: 0.72rem;
+}
+.ed-today-main {
+  font-size: 1.25rem;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--ed-ivory);
+  font-variation-settings: 'SOFT' 60;
+  margin-bottom: 0.2rem;
+}
+.ed-today-daf {
+  font-weight: 600;
+  color: var(--ed-brass);
+  font-style: normal;
+}
+.ed-today-meta {
+  font-size: 0.75rem;
+  color: var(--ed-warm-muted);
+  font-style: italic;
+}
+
 /* ─── INLINE CHOOSER ─────────────────── */
 .ed-chooser {
   margin-bottom: 4rem;
@@ -928,8 +1005,23 @@ body:has(#landing:not(.app-hidden)) #app-header .icon-btn:hover {
 
 /* Main */
 main { max-width: 1400px; margin: 0 auto; padding: 2rem; }
-#daf-header { margin-bottom: 1.5rem; }
+#daf-header {
+  margin-bottom: 1.5rem;
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap;
+}
 #daf-header h2 { margin: 0; font-size: 1.6rem; color: var(--accent); }
+#daf-nav { display: flex; gap: 0.5rem; }
+.daf-nav-btn {
+  background: transparent; color: var(--ink);
+  border: 1px solid var(--rule);
+  padding: 0.4rem 0.85rem; border-radius: 3px; cursor: pointer;
+  font-family: inherit; font-size: 0.85rem;
+  transition: all 0.12s;
+}
+.daf-nav-btn:hover { background: var(--hover); border-color: var(--accent); color: var(--accent); }
+.daf-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.daf-nav-btn:disabled:hover { background: transparent; border-color: var(--rule); color: var(--ink); }
 
 /* Tzuras hadaf — authentic Vilna page look */
 #daf {
