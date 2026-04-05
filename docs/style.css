@@ -1306,11 +1306,25 @@ main { max-width: 1400px; margin: 0 auto; padding: 2rem; }
 .modal-body {
   padding: 1rem 1.25rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   font-size: 0.95rem;
   line-height: 1.65;
   flex: 1;
   min-height: 120px;
 }
+
+/* Body scroll lock when any modal is open (fixes iOS scroll chaining) */
+body.modal-open {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+.modal-backdrop { overscroll-behavior: contain; touch-action: none; }
+.modal-source { overscroll-behavior: contain; }
 .modal-body strong { color: var(--accent); }
 .modal-body h3 {
   font-size: 1rem; font-weight: 700; margin: 1rem 0 0.5rem;

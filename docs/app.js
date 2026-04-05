@@ -656,6 +656,24 @@ function groupBy(arr, fn) {
 // ---------- Modal + Anthropic streaming ----------
 function getApiKey() { return localStorage.getItem(KEY_STORAGE) || ""; }
 
+// Track page scroll position across modal open/close so we can restore it.
+let _modalSavedScrollY = 0;
+
+function lockBodyScroll() {
+  _modalSavedScrollY = window.scrollY;
+  document.body.style.top = `-${_modalSavedScrollY}px`;
+  document.body.classList.add("modal-open");
+}
+function unlockBodyScroll() {
+  document.body.classList.remove("modal-open");
+  document.body.style.top = "";
+  window.scrollTo(0, _modalSavedScrollY);
+}
+function anyModalOpen() {
+  return !$("#modal").classList.contains("modal-hidden") ||
+         !$("#settings-modal").classList.contains("modal-hidden");
+}
+
 function openExplain(ref, kind, hebrewText, englishText, context) {
   $("#modal-kind").textContent = kind;
   $("#modal-ref").textContent = ref;
@@ -667,12 +685,14 @@ function openExplain(ref, kind, hebrewText, englishText, context) {
   src.appendChild(he);
   $("#modal-body").innerHTML = '<span class="cursor"></span>';
   $("#modal").classList.remove("modal-hidden");
+  lockBodyScroll();
   startExplain(ref, context);
 }
 
 function closeModal() {
   $("#modal").classList.add("modal-hidden");
   if (currentStream) { currentStream.abort(); currentStream = null; }
+  if (!anyModalOpen()) unlockBodyScroll();
 }
 
 const SYSTEM_PROMPT = `You are a patient chavrusa explaining one small piece of Gemara to a learner.
@@ -960,8 +980,12 @@ function openSettings() {
   $("#api-key-input").value = getApiKey();
   setApiKeyStatus();
   $("#settings-modal").classList.remove("modal-hidden");
+  lockBodyScroll();
 }
-function closeSettings() { $("#settings-modal").classList.add("modal-hidden"); }
+function closeSettings() {
+  $("#settings-modal").classList.add("modal-hidden");
+  if (!anyModalOpen()) unlockBodyScroll();
+}
 
 // ---------- Event wiring ----------
 $("#settings-btn").onclick = openSettings;
