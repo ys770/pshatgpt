@@ -1147,6 +1147,50 @@ main { max-width: 1400px; margin: 0 auto; padding: 2rem; }
 /* Mobile column toggles — hidden on desktop */
 .col-toggles { display: none; }
 
+/* Cross-daf context: preceding/following segments from neighboring daf */
+.context-section {
+  margin: 1rem 0;
+  padding: 0.9rem 1rem;
+  background: rgba(216, 197, 151, 0.18);
+  border: 1px dashed rgba(122, 31, 46, 0.35);
+  border-radius: 4px;
+  font-family: "Frank Ruhl Libre", "David", serif;
+}
+.context-section.context-before { margin-bottom: 1.2rem; }
+.context-section.context-after  { margin-top: 1.2rem; }
+.context-header {
+  display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+  font-family: Georgia, serif; font-size: 0.75rem; color: var(--muted);
+  font-style: italic; margin-bottom: 0.55rem;
+  padding-bottom: 0.45rem; border-bottom: 1px dotted rgba(122, 31, 46, 0.3);
+  direction: ltr;
+}
+.context-header strong { color: var(--accent); font-weight: 600; font-style: normal; }
+.context-arrow { color: var(--accent); font-weight: 700; font-size: 0.95rem; }
+.context-jump {
+  margin-left: auto;
+  background: transparent; color: var(--accent);
+  border: 1px solid var(--accent); border-radius: 3px;
+  padding: 0.25rem 0.6rem; cursor: pointer;
+  font-family: Georgia, serif; font-size: 0.72rem; font-weight: 600;
+  transition: all 0.12s;
+}
+.context-jump:hover { background: var(--accent); color: var(--card); }
+.context-body {
+  direction: rtl; text-align: justify;
+  line-height: 1.75; font-size: 1rem; color: #333;
+  opacity: 0.88;
+}
+.context-seg {
+  cursor: pointer; padding: 0.1rem 0.15rem;
+  border-radius: 2px; transition: background 0.12s;
+}
+.context-seg:hover { background: rgba(122, 31, 46, 0.1); }
+@media (max-width: 600px) {
+  .context-section { padding: 0.75rem; }
+  .context-body { font-size: 0.95rem; }
+}
+
 /* Secondary meforshim: expandable cards below the tzuras hadaf */
 .more-meforshim {
   margin-top: 1.5rem; padding-top: 1.25rem;

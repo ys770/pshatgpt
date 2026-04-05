@@ -354,15 +354,54 @@ function extractDisplayName(indexTitle, tractate) {
   return name.trim();
 }
 
+// How many segments to fetch from the neighboring daf on each side for
+// cross-boundary sugya context.
+const CONTEXT_SEGMENTS = 4;
+
+// Get the ref of the neighbor daf (prev/next amud) respecting tractate bounds.
+function neighborDafRef(baseRef, direction) {
+  const m = baseRef.match(/^(.+?)\s+(\d+)([ab])$/);
+  if (!m) return null;
+  const tractate = m[1];
+  let daf = parseInt(m[2], 10);
+  let amud = m[3];
+  if (direction === "next") {
+    if (amud === "a") amud = "b";
+    else { daf += 1; amud = "a"; }
+  } else {
+    if (amud === "b") amud = "a";
+    else { daf -= 1; amud = "b"; }
+  }
+  if (daf < 2) return null;
+  // Look up tractate bounds from INDEX.
+  if (INDEX) {
+    let t = null;
+    for (const s of INDEX.sederim) {
+      t = s.tractates.find(tr => tr.name === tractate);
+      if (t) break;
+    }
+    if (t) {
+      if (daf > t.last_daf) return null;
+      if (daf === t.last_daf && t.last_amud === "a" && amud === "b") return null;
+    }
+  }
+  return `${tractate} ${daf}${amud}`;
+}
+
 async function fetchDaf(baseRef, _unused) {
   const m = baseRef.match(/^(.+)\s+(\d+[ab])$/);
   if (!m) throw new Error(`bad ref: ${baseRef}`);
   const [_, tractate, daf] = m;
 
-  // Parallel: daf text + discovery (counts only, no commentary text yet)
-  const [segments, discovered] = await Promise.all([
+  const prevRef = neighborDafRef(baseRef, "prev");
+  const nextRef = neighborDafRef(baseRef, "next");
+
+  // Parallel: daf text + discovery + adjacent daf snippets for cross-boundary sugyos
+  const [segments, discovered, prevSegs, nextSegs] = await Promise.all([
     fetchDafSegments(baseRef),
     discoverCommentatorsFull(baseRef),
+    prevRef ? fetchDafSegments(prevRef).then(ss => ss.slice(-CONTEXT_SEGMENTS)) : Promise.resolve([]),
+    nextRef ? fetchDafSegments(nextRef).then(ss => ss.slice(0, CONTEXT_SEGMENTS)) : Promise.resolve([]),
   ]);
 
   // Filter to commentaries that match this tractate.
@@ -387,8 +426,12 @@ async function fetchDaf(baseRef, _unused) {
   return {
     base_ref: baseRef,
     segments,
-    secondaryAvailable: secondary, // metadata only (name, count, heName, indexTitle)
-    secondaryLoaded: new Set(),    // displayNames already lazy-loaded
+    prevRef,
+    nextRef,
+    contextBefore: prevSegs,   // last segments of previous daf
+    contextAfter: nextSegs,    // first segments of next daf
+    secondaryAvailable: secondary,
+    secondaryLoaded: new Set(),
   };
 }
 
@@ -661,6 +704,11 @@ function renderDafDesktop(daf) {
 
   const wrapper = document.createElement("div");
 
+  // Context from previous daf (if sugya started there)
+  if (daf.contextBefore && daf.contextBefore.length) {
+    wrapper.appendChild(renderContextSection("before", daf.prevRef, daf.contextBefore));
+  }
+
   const page = document.createElement("div");
   page.className = "daf-page";
   if (rashiSideName) {
@@ -677,7 +725,45 @@ function renderDafDesktop(daf) {
     wrapper.appendChild(renderMoreMeforshim(daf.secondaryAvailable));
   }
 
+  // Context from next daf (if sugya continues there)
+  if (daf.contextAfter && daf.contextAfter.length) {
+    wrapper.appendChild(renderContextSection("after", daf.nextRef, daf.contextAfter));
+  }
+
   return wrapper;
+}
+
+function renderContextSection(position, neighborRef, segments) {
+  const section = document.createElement("section");
+  section.className = `context-section context-${position}`;
+  const header = document.createElement("div");
+  header.className = "context-header";
+  header.innerHTML = position === "before"
+    ? `<span class="context-arrow">←</span> <span>Context from end of <strong>${escapeHtml(neighborRef)}</strong></span> <button class="context-jump" data-target="${escapeHtml(neighborRef)}">open daf →</button>`
+    : `<span>Sugya continues on <strong>${escapeHtml(neighborRef)}</strong></span> <span class="context-arrow">→</span> <button class="context-jump" data-target="${escapeHtml(neighborRef)}">open daf →</button>`;
+  section.appendChild(header);
+  const body = document.createElement("div");
+  body.className = "context-body";
+  for (const seg of segments) {
+    const span = document.createElement("span");
+    span.className = "context-seg hebrew-text clickable";
+    span.textContent = seg.hebrew + " ";
+    span.title = seg.ref;
+    span.onclick = () => {
+      // Open explain scoped to that specific segment.
+      openExplain(seg.ref, "gemara", seg.hebrew, seg.english, {
+        kind: "gemara", text: seg.hebrew, english: seg.english,
+      });
+    };
+    body.appendChild(span);
+  }
+  section.appendChild(body);
+  header.querySelector(".context-jump").addEventListener("click", (e) => {
+    e.stopPropagation();
+    const target = e.target.dataset.target;
+    if (target) loadDaf(target);
+  });
+  return section;
 }
 
 function renderMoreMeforshim(secondaryMeta) {
@@ -740,6 +826,11 @@ function renderMoreMeforshim(secondaryMeta) {
 
 function renderDafMobile(daf) {
   const wrapper = document.createElement("div");
+
+  if (daf.contextBefore && daf.contextBefore.length) {
+    wrapper.appendChild(renderContextSection("before", daf.prevRef, daf.contextBefore));
+  }
+
   const page = document.createElement("div");
   page.className = "daf-page daf-mobile";
 
@@ -787,6 +878,9 @@ function renderDafMobile(daf) {
   wrapper.appendChild(page);
   if (daf.secondaryAvailable && daf.secondaryAvailable.length) {
     wrapper.appendChild(renderMoreMeforshim(daf.secondaryAvailable));
+  }
+  if (daf.contextAfter && daf.contextAfter.length) {
+    wrapper.appendChild(renderContextSection("after", daf.nextRef, daf.contextAfter));
   }
   return wrapper;
 }
@@ -1283,11 +1377,20 @@ says D." (listing, not teaching)`;
 
 function buildLogicChainMessage(daf) {
   const lines = [];
+  if (daf.contextBefore && daf.contextBefore.length) {
+    lines.push(`## Preceding context (end of ${daf.prevRef}):`);
+    for (const s of daf.contextBefore) lines.push(`[${s.ref}] ${s.hebrew}`);
+    lines.push("");
+  }
   lines.push(`# Daf: ${daf.base_ref}`);
   lines.push(`\n## Gemara text (all segments):`);
   for (const s of daf.segments) {
     lines.push(`[${s.index}] ${s.hebrew}`);
     if (s.english) lines.push(`   (${s.english})`);
+  }
+  if (daf.contextAfter && daf.contextAfter.length) {
+    lines.push(`\n## Continuing context (start of ${daf.nextRef}):`);
+    for (const s of daf.contextAfter) lines.push(`[${s.ref}] ${s.hebrew}`);
   }
   // Include loaded commentaries for extra grounding.
   const allComms = daf.segments.flatMap(s => s.commentaries.map(c => ({ ...c, segIndex: s.index })));
@@ -1379,13 +1482,26 @@ function openLogicChain() {
 function buildUserMessage(ref, ctx, currentDaf) {
   const lines = [];
 
-  // Always provide the full daf (gemara + all meforshim) as grounding
-  // context so follow-up questions can be answered without hallucination.
+  // Cross-boundary context — sugyos often span dafim.
+  if (currentDaf.contextBefore && currentDaf.contextBefore.length) {
+    lines.push(`## Preceding context (end of ${currentDaf.prevRef}):`);
+    for (const s of currentDaf.contextBefore) {
+      lines.push(`[${s.ref}] ${s.hebrew}`);
+    }
+    lines.push("");
+  }
+
   lines.push(`# Full daf context: ${currentDaf.base_ref}`);
   lines.push(`\n## Gemara text (all segments):`);
   for (const s of currentDaf.segments) {
     lines.push(`[${s.index}] ${s.hebrew}`);
     if (s.english) lines.push(`   (${s.english})`);
+  }
+  if (currentDaf.contextAfter && currentDaf.contextAfter.length) {
+    lines.push(`\n## Continuing context (start of ${currentDaf.nextRef}):`);
+    for (const s of currentDaf.contextAfter) {
+      lines.push(`[${s.ref}] ${s.hebrew}`);
+    }
   }
 
   // Group commentaries by commentator, all segments
