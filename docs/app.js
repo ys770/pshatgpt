@@ -143,6 +143,11 @@ const SEFARIA_RELATED = "https://www.sefaria.org/api/related";
 const ANTHROPIC = "https://api.anthropic.com/v1/messages";
 const MODEL = "claude-sonnet-4-5";
 
+// Free-tier proxy: Cloudflare Worker that forwards to Anthropic using the
+// owner's API key, rate-limited per IP. Leave empty string to disable.
+// Replace with your worker URL after deploying worker/ (see worker/README.md).
+const PROXY_URL = "https://pshatgpt-proxy.ys770.workers.dev";
+
 const KEY_STORAGE = "pshatgpt_api_key";
 
 let INDEX = null;
@@ -583,7 +588,9 @@ async function startExplain(ref, ctx) {
   body.innerHTML = '<span class="cursor"></span>';
 
   const apiKey = getApiKey();
-  if (!apiKey) {
+  const useProxy = !apiKey && PROXY_URL;
+
+  if (!apiKey && !PROXY_URL) {
     body.innerHTML = `<em>No API key saved. Click ⚙ Settings to add one.</em>`;
     return;
   }
@@ -592,16 +599,19 @@ async function startExplain(ref, ctx) {
   const controller = new AbortController();
   currentStream = controller;
 
+  const endpoint = useProxy ? `${PROXY_URL}/v1/messages` : ANTHROPIC;
+  const headers = { "content-type": "application/json" };
+  if (!useProxy) {
+    headers["x-api-key"] = apiKey;
+    headers["anthropic-version"] = "2023-06-01";
+    headers["anthropic-dangerous-direct-browser-access"] = "true";
+  }
+
   let resp;
   try {
-    resp = await fetch(ANTHROPIC, {
+    resp = await fetch(endpoint, {
       method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true",
-      },
+      headers,
       signal: controller.signal,
       body: JSON.stringify({
         model: MODEL,
@@ -618,8 +628,27 @@ async function startExplain(ref, ctx) {
   }
   if (!resp.ok) {
     const txt = await resp.text();
-    body.innerHTML = `<em>Anthropic error ${resp.status}: ${escapeHtml(txt.slice(0,300))}</em>`;
+    // Rate limit reached on the free tier: give a clear upgrade message.
+    if (resp.status === 429 && useProxy) {
+      body.innerHTML = `
+        <strong>Free-tier daily limit reached.</strong><br><br>
+        You've used your 10 free explanations for today. For unlimited,
+        add your own Anthropic API key in
+        <a href="#" onclick="openSettings();return false;" style="color:var(--accent)">⚙ Settings</a>
+        — get one at
+        <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer" style="color:var(--accent)">console.anthropic.com</a>.
+      `;
+      return;
+    }
+    let msg = txt.slice(0, 400);
+    try { const j = JSON.parse(txt); if (j.message) msg = j.message; else if (j.error?.message) msg = j.error.message; } catch {}
+    body.innerHTML = `<em>Error ${resp.status}: ${escapeHtml(msg)}</em>`;
     return;
+  }
+  // Track remaining free-tier quota if the proxy reported it.
+  if (useProxy) {
+    const remaining = resp.headers.get("x-pshatgpt-remaining");
+    if (remaining !== null) updateFreeTierBadge(parseInt(remaining, 10));
   }
 
   const reader = resp.body.getReader();
@@ -665,12 +694,33 @@ function escapeHtml(s) {
     ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
 
+// ---------- Free-tier badge ----------
+function updateFreeTierBadge(remaining) {
+  let badge = $("#free-tier-badge");
+  if (!badge) {
+    badge = document.createElement("div");
+    badge.id = "free-tier-badge";
+    badge.className = "free-tier-badge";
+    document.body.appendChild(badge);
+  }
+  badge.textContent = `Free tier: ${remaining} left today`;
+  badge.style.display = remaining >= 0 ? "block" : "none";
+  if (remaining <= 2) badge.classList.add("low");
+  else badge.classList.remove("low");
+}
+
 // ---------- Settings ----------
 function setApiKeyStatus() {
   const status = $("#api-key-status");
   if (!status) return;
   const k = getApiKey();
-  status.textContent = k ? `Saved (…${k.slice(-4)})` : "No key saved";
+  if (k) {
+    status.textContent = `Saved (…${k.slice(-4)}) — unlimited`;
+  } else if (PROXY_URL) {
+    status.textContent = `Using free tier (10/day). Add a key for unlimited.`;
+  } else {
+    status.textContent = "No key saved";
+  }
 }
 function openSettings() {
   $("#api-key-input").value = getApiKey();
@@ -810,5 +860,7 @@ $("#random-daf-btn").addEventListener("click", () => {
 (async () => {
   await loadIndex();
   renderTodayShortcuts();
-  if (!getApiKey()) setTimeout(openSettings, 300);
+  // With a free-tier proxy, don't nag users for a key on first visit.
+  // They can upgrade in Settings if/when they hit the limit.
+  if (!getApiKey() && !PROXY_URL) setTimeout(openSettings, 300);
 })();

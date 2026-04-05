@@ -9,10 +9,20 @@ Pshat (פשט) = the plain-meaning reading. This tool gives you that first layer
 ## Quick start
 
 1. Open [ys770.github.io/PshatGPT](https://ys770.github.io/PshatGPT/)
-2. Click ⚙ Settings → paste your Anthropic API key ([get one](https://console.anthropic.com/settings/keys)) → Save
-3. Pick a tractate + daf → click anything Hebrew → watch Claude explain it
+2. Pick a tractate + daf → click anything Hebrew → watch Claude explain it
 
-Your API key stays in your browser's localStorage and is sent directly to Anthropic — it never touches any server.
+**No setup needed** — you get 10 free explanations/day through a shared proxy.
+For unlimited, click ⚙ Settings and paste your own Anthropic API key
+([get one](https://console.anthropic.com/settings/keys)). Your key stays in
+your browser's localStorage and is sent directly to Anthropic.
+
+## How the free tier works
+
+A tiny Cloudflare Worker (in [`worker/`](./worker)) proxies requests to
+Anthropic using the owner's API key, with per-IP rate limits (10/day). When
+you add your own key in Settings, the browser calls Anthropic directly and
+the proxy is bypassed — so the free tier budget is preserved for people who
+don't have keys.
 
 ## What it does
 

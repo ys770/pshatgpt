@@ -1184,6 +1184,18 @@ main { max-width: 1400px; margin: 0 auto; padding: 2rem; }
 }
 .modal-body strong { color: var(--accent); }
 
+/* Free-tier badge (floating, low priority) */
+.free-tier-badge {
+  position: fixed; bottom: 1rem; right: 1rem; z-index: 50;
+  background: var(--card); border: 1px solid var(--rule);
+  padding: 0.4rem 0.75rem; border-radius: 3px;
+  font-size: 0.75rem; font-family: inherit; color: var(--muted);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  animation: badgeIn 0.3s ease-out;
+}
+.free-tier-badge.low { border-color: #b06730; color: #b06730; font-weight: 600; }
+@keyframes badgeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
 /* Settings */
 .settings-box { max-width: 500px; }
 .settings-body { padding: 1.25rem; }
