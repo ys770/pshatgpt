@@ -704,51 +704,85 @@ function closeModal() {
   if (!anyModalOpen()) unlockBodyScroll();
 }
 
-const SYSTEM_PROMPT = `You are a patient chavrusa explaining one small piece of Gemara to a learner.
+const SYSTEM_PROMPT = `You are a patient chavrusa explaining Gemara to a learner.
 
-You'll receive ONE unit — either a Gemara line, a Rashi/Rashbam dibur hamatchil,
-or a Tosafot dibur hamatchil — together with relevant context from the daf.
+You'll receive ONE unit to explain — a Gemara line, a Rashi/Rashbam dibur
+hamatchil, or a Tosafot dibur hamatchil — plus the full daf (gemara + all
+meforshim) as context. The learner may ask follow-up questions afterward.
 
-Explain it clearly and contextually:
+## How to explain (first response)
 
-1. **Translate** the Hebrew/Aramaic into natural English (not a word-for-word gloss).
-2. **Locate** it: what is the gemara doing at this point? What question or claim
-   is being made, and how does this unit advance it?
-3. **Unpack** the reasoning: what's the logical move? What assumption does it
-   rely on? What's the chiddush?
+1. **Translate** the Hebrew/Aramaic into natural English (not word-for-word).
+2. **Locate** it: what is the gemara doing here? What question or claim is
+   being made, and how does this advance it?
+3. **Unpack** the reasoning: what's the logical move? What's the chiddush?
 4. **For Rashi/Rashbam**: what problem in the text is the mefaresh solving?
 5. **For Tosafot**: what kushya is being asked, from where, and what's the tirutz?
 
-Keep it conversational but precise. Use Hebrew/Aramaic terms with transliteration
-and English (e.g. "chazaka — presumptive ownership"). Stop when the explanation is
-complete — usually 150-400 words.`;
+Keep it conversational but precise. Use Hebrew/Aramaic terms with
+transliteration and English ("chazaka — presumptive ownership"). Typically
+150-400 words for an initial explanation.
+
+## ANTI-HALLUCINATION RULES (critical)
+
+These rules apply to every response, especially follow-ups:
+
+- **Never fabricate quotes.** If you don't have the exact Hebrew text of a
+  Rashi/Tosafot/source in your context, DO NOT quote it. Say "I don't have
+  that Rashi loaded — click on it and I can explain it directly."
+- **Never invent cross-references.** Don't say "the Gemara in Bava Metzia 21a
+  says X" unless you're very confident and even then frame it as "I believe"
+  or "if memory serves, though you should verify."
+- **Cite what you have.** When you reference a specific claim, say which
+  segment/commentator it's from (e.g., "as Tosafot on 33b:8 raises"). If the
+  user can't verify it against what's on screen, be very cautious.
+- **Say "I don't know."** For obscure questions or things outside the daf
+  you've been given, it's better to say "I'm not sure" than to guess.
+- **Halacha l'maaseh**: ALWAYS defer to the learner's rav. Never rule on
+  practical halacha.
+- **Stay grounded in the provided text.** The daf + its meforshim are your
+  entire source of truth. If asked about something outside that scope,
+  acknowledge the limit.`;
 
 function buildUserMessage(ref, ctx, currentDaf) {
   const lines = [];
-  if (ctx.kind === "gemara") {
-    lines.push(`**Clicked: Gemara segment ${ref}**\n`);
-    lines.push(`Hebrew/Aramaic: ${ctx.text}\n`);
-    if (ctx.english) lines.push(`Existing English translation: ${ctx.english}\n`);
-    lines.push(`\nFor context, here is the surrounding daf (${currentDaf.base_ref}):\n`);
-    for (const s of currentDaf.segments) {
-      lines.push(`[${s.index}] ${s.hebrew}`);
+
+  // Always provide the full daf (gemara + all meforshim) as grounding
+  // context so follow-up questions can be answered without hallucination.
+  lines.push(`# Full daf context: ${currentDaf.base_ref}`);
+  lines.push(`\n## Gemara text (all segments):`);
+  for (const s of currentDaf.segments) {
+    lines.push(`[${s.index}] ${s.hebrew}`);
+    if (s.english) lines.push(`   (${s.english})`);
+  }
+
+  // Group commentaries by commentator, all segments
+  const allComms = currentDaf.segments.flatMap(s => s.commentaries.map(c => ({ ...c, segIndex: s.index })));
+  const byName = groupBy(allComms, c => c.commentator);
+  for (const [name, items] of byName) {
+    lines.push(`\n## ${name} on ${currentDaf.base_ref}:`);
+    for (const c of items) {
+      lines.push(`[seg ${c.segIndex} · ${c.ref}] ${c.hebrew}`);
     }
+  }
+
+  // Now the specific clicked item.
+  lines.push(`\n---\n`);
+  if (ctx.kind === "gemara") {
+    lines.push(`**The learner clicked on Gemara segment ${ref}:**`);
+    lines.push(`Hebrew/Aramaic: ${ctx.text}`);
+    if (ctx.english) lines.push(`English translation: ${ctx.english}`);
     lines.push(`\nExplain this gemara line.`);
   } else if (ctx.kind === "commentary") {
-    // Find the parent gemara segment for context.
     const m = ref.match(/:(\d+):/);
     const segIdx = m ? parseInt(m[1]) : null;
     const seg = currentDaf.segments.find(s => s.index === segIdx);
-    lines.push(`**Clicked: ${ctx.commentator} on ${ref}**\n`);
+    lines.push(`**The learner clicked on ${ctx.commentator} (${ref}):**`);
     if (seg) {
-      lines.push(`The gemara line this comments on:`);
-      lines.push(`  Hebrew: ${seg.hebrew}`);
-      if (seg.english) lines.push(`  English: ${seg.english}`);
-      lines.push("");
+      lines.push(`This comments on gemara segment [${seg.index}]: ${seg.hebrew}`);
     }
-    lines.push(`${ctx.commentator}'s comment (Hebrew):`);
-    lines.push(`  ${ctx.text}\n`);
-    lines.push(`Explain this ${ctx.commentator}.`);
+    lines.push(`\n${ctx.commentator}'s comment: ${ctx.text}`);
+    lines.push(`\nExplain this ${ctx.commentator}.`);
   }
   return lines.join("\n");
 }
