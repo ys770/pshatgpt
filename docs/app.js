@@ -874,15 +874,13 @@ function openExplain(ref, kind, hebrewText, englishText, context) {
   he.className = "hebrew-text";
   he.textContent = hebrewText;
   src.appendChild(he);
-  // Decide whether to use deep-Tosafot mode.
-  const isDeepTosafot = context?.kind === "commentary"
-    && context?.commentator === "Tosafot"
-    && (context?.text?.length || 0) >= DEEP_TOSAFOT_THRESHOLD;
+  // Deep-analysis mode: any commentary ≥ DEEP_THRESHOLD Hebrew chars.
+  const isDeep = context?.kind === "commentary"
+    && (context?.text?.length || 0) >= DEEP_THRESHOLD;
 
-  // Visual indicator in the modal header.
   const kindEl = $("#modal-kind");
-  if (isDeepTosafot) {
-    kindEl.textContent = "deep tosafot";
+  if (isDeep) {
+    kindEl.textContent = `deep ${kind.toLowerCase()}`;
     kindEl.classList.add("modal-kind-deep");
   } else {
     kindEl.classList.remove("modal-kind-deep");
@@ -891,8 +889,8 @@ function openExplain(ref, kind, hebrewText, englishText, context) {
   $("#modal-body").innerHTML = '<span class="cursor"></span>';
   // Reset conversation for the new segment.
   conversation = [];
-  currentSystem = isDeepTosafot ? DEEP_TOSAFOT_PROMPT : SYSTEM_PROMPT;
-  currentMaxTokens = isDeepTosafot ? DEEP_MAX_TOKENS : 2048;
+  currentSystem = isDeep ? DEEP_TOSAFOT_PROMPT : SYSTEM_PROMPT;
+  currentMaxTokens = isDeep ? DEEP_MAX_TOKENS : 2048;
   currentUserPrefix = buildUserMessage(ref, context, currentDaf);
   $("#followup-input").value = "";
   $("#modal").classList.remove("modal-hidden");
@@ -907,42 +905,56 @@ function closeModal() {
   if (!anyModalOpen()) unlockBodyScroll();
 }
 
-// A Tosafot longer than this triggers the deep-analysis system prompt.
-const DEEP_TOSAFOT_THRESHOLD = 400;
+// A commentary longer than this triggers the deep-analysis system prompt.
+const DEEP_THRESHOLD = 400;
 const DEEP_MAX_TOKENS = 4096;
 
-const DEEP_TOSAFOT_PROMPT = `You are a talmid chacham doing a DEEP, STRUCTURED analysis of a long Tosafot for a serious learner. This is iyun-level — do NOT summarize. Break it down fully, piece by piece.
+const DEEP_TOSAFOT_PROMPT = `You are a talmid chacham doing a DEEP, STRUCTURED analysis of a long mefaresh for a serious learner. This is iyun-level — do NOT summarize. Break the Hebrew text into labeled parts, then walk through each.
 
-Structure your response with these sections:
+## PHASE 1 — STRUCTURAL BREAKDOWN (start here)
 
-## 1. Dibur HaMatchil (the headword)
-State the exact phrase from the gemara that Tosafot is commenting on. What in the gemara text prompted Tosafot to comment at all? (Often there's an assumption or an easy read that Tosafot wants to disturb.)
+Before explaining anything, identify the distinct parts of this mefaresh. Quote the opening Hebrew words of each part verbatim (2-5 words is enough), and label what kind of move it is. Present it as a short numbered list:
 
-## 2. The Kushya
-State the problem Tosafot is raising. Where does the problem come from — this sugya itself, or a parallel gemara / pasuk / principle? Be explicit: "Tosafot is bothered that X, because elsewhere Y."
+\`\`\`
+## Breakdown
+1. **דיבור המתחיל** — "כיון דאודי..." — the headword
+2. **Kushya** — "וקשה לי..." — the problem being raised
+3. **First answer (rejected)** — "וי״ל..." — an attempt
+4. **Challenge to first answer** — "ודוחק לומר..." — why it doesn't work
+5. **Second answer (chosen)** — "ואור״י..." — the accepted tirutz
+6. **Chiddush** — "והא דתנן..." — the new principle
+\`\`\`
 
-## 3. Proposed Answers (walk through ALL of them)
-Tosafot often considers multiple tirutzim before settling on one. Walk through EACH in order:
-- **First answer**: what's proposed, who says it (if named — ר״י, ר״ת, etc.), and why Tosafot finds it insufficient
-- **Second answer**: same
-- …and so on
-Do NOT skip rejected answers. They are essential to the argument — they show what doesn't work and why. Explain each rejection carefully.
+This breakdown orients the learner before you dive in.
 
-## 4. The Chosen Tirutz
-State the answer Tosafot lands on. Explain clearly WHY it resolves the kushya. What distinction is Tosafot drawing? What's the key move?
+## PHASE 2 — WALK THROUGH EACH PART
 
-## 5. The Chiddush
-What new principle, distinction, or rule does this Tosafot establish? Would a learner who mastered this Tosafot now see other sugyot differently? Name the chiddush in a single crisp sentence if possible.
+For each numbered part from Phase 1:
 
-## 6. Cross-references (if Tosafot cites other sugyot)
-List each place Tosafot mentions — give the reference and what Tosafot says about it. If you don't have the cited source in your context, note that and say "verify against the actual sugya."
+### Part N: [label]
+> **Hebrew**: [quote the full Hebrew segment, not just the opening]
+> **Translation**: [natural English, not word-for-word]
+> **What's happening**: explain the move — what's being asked, what's being argued, what assumption is in play. Go slow. This is where the iyun happens.
 
-## 7. Technical terms
-Explain any of these that appear: "וקשה", "ותירץ", "ואומר ר״י", "וי״ל", "מיהו", "תימה", "הקשה", "ותדע". These aren't filler — they signal the structure of the argument.
+Use these guides based on what you're analyzing:
+
+**Tosafot-specific**: identify dibur hamatchil → kushya → each attempted tirutz (including rejected ones, WITH reasons for rejection) → chosen tirutz → chiddush. Never skip rejected answers — the dialectic IS the argument.
+
+**Ramban / Rashba / Ritva**: often start with the gemara's question, then give their framing. Identify: (a) what easy read are they disturbing? (b) what's their sharper framing? (c) how does this differ from how Rashi/Rashbam read it?
+
+**Meiri**: usually opens with "אמר המאירי", gives halachic summary + peshat. Identify both layers.
+
+**Rif / Rosh**: halachic extraction. Identify what they preserved from the sugya and what they dropped. What halachic conclusion are they reaching?
+
+**Maharsha / Pnei Yehoshua / Maharshal**: these are super-commentaries on Tosafot/Rashi. Identify which Tosafot or Rashi they're commenting on and what move they're making (sharpening, challenging, reframing).
+
+## PHASE 3 — TECHNICAL TERMS
+
+At the end, if the mefaresh used any of these signal-phrases, briefly explain what each one is doing in the argument: "וקשה", "ותירץ", "וא״ת", "ואומר ר״י", "ואור״י", "וי״ל", "מיהו", "תימה", "הקשה", "ותדע", "ודוחק", "וז״ל", "עכ״ל". These aren't filler — they signal the structure.
 
 ---
 
-Stay close to the Hebrew. Quote phrases verbatim in Hebrew and then translate + explain. Typical length for a long Tosafot: 500–900 words of careful explanation. Don't rush.
+Stay close to the Hebrew. Quote verbatim as you go. Typical length: 500–900 words. Don't rush.
 
 All anti-hallucination rules still apply: don't fabricate quotes from sources you don't have in context.
 
