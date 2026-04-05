@@ -1310,9 +1310,27 @@ main { max-width: 1400px; margin: 0 auto; padding: 2rem; }
   line-height: 1.65;
   flex: 1;
   min-height: 120px;
-  white-space: pre-wrap;
 }
 .modal-body strong { color: var(--accent); }
+.modal-body h3 {
+  font-size: 1rem; font-weight: 700; margin: 1rem 0 0.5rem;
+  color: var(--accent); letter-spacing: -0.005em;
+}
+.modal-body h4 {
+  font-size: 0.9rem; font-weight: 700; margin: 0.85rem 0 0.4rem;
+  color: var(--ink); letter-spacing: -0.005em;
+}
+.modal-body h3:first-child, .modal-body h4:first-child { margin-top: 0; }
+.modal-body p { margin: 0 0 0.55rem; }
+.modal-body p:last-child { margin-bottom: 0; }
+.modal-body ul { margin: 0 0 0.6rem; padding-left: 1.2rem; }
+.modal-body li { margin-bottom: 0.3rem; line-height: 1.55; }
+.modal-body code {
+  background: var(--bg); padding: 0.1rem 0.35rem; border-radius: 2px;
+  font-family: "Menlo", "Consolas", monospace; font-size: 0.85em;
+  color: var(--accent);
+}
+.modal-body em { font-style: italic; }
 
 /* Free-tier badge (floating, always visible when using free tier) */
 .free-tier-badge {

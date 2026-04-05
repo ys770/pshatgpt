@@ -832,8 +832,45 @@ async function startExplain(ref, ctx) {
 }
 
 function renderMarkdownish(text) {
-  let s = escapeHtml(text);
+  // Line-based: headers, lists, then inline (bold, italic, code).
+  const lines = text.split("\n");
+  const out = [];
+  let inList = false;
+
+  for (const raw of lines) {
+    const line = raw; // keep original
+    const mH3 = line.match(/^###\s+(.+)$/);
+    const mH2 = line.match(/^##\s+(.+)$/);
+    const mH1 = line.match(/^#\s+(.+)$/);
+    const mLi = line.match(/^[-*]\s+(.+)$/);
+
+    if (!mLi && inList) { out.push("</ul>"); inList = false; }
+
+    if (mH3) {
+      out.push(`<h4>${inlineFmt(mH3[1])}</h4>`);
+    } else if (mH2) {
+      out.push(`<h3>${inlineFmt(mH2[1])}</h3>`);
+    } else if (mH1) {
+      out.push(`<h3>${inlineFmt(mH1[1])}</h3>`);
+    } else if (mLi) {
+      if (!inList) { out.push("<ul>"); inList = true; }
+      out.push(`<li>${inlineFmt(mLi[1])}</li>`);
+    } else if (line.trim() === "") {
+      out.push("");
+    } else {
+      out.push(`<p>${inlineFmt(line)}</p>`);
+    }
+  }
+  if (inList) out.push("</ul>");
+  return out.join("\n");
+}
+
+function inlineFmt(s) {
+  s = escapeHtml(s);
   s = s.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  // single-asterisk italic — only if NOT preceded/followed by another *
+  s = s.replace(/(?<!\*)\*([^*\n]+)\*(?!\*)/g, "<em>$1</em>");
+  s = s.replace(/`([^`\n]+)`/g, "<code>$1</code>");
   return s;
 }
 function escapeHtml(s) {
