@@ -1265,30 +1265,50 @@ function buildLogicChainMessage(daf) {
 }
 
 function openIyunMode() {
-  if (!currentDaf) return;
-  const remaining = getIyunRemaining();
-  if (remaining <= 0) {
-    alert("You've used your 2 free Iyun sessions on this device. Add your own API key in Settings for unlimited access.");
+  if (!currentDaf) {
+    alert("Load a daf first.");
     return;
   }
-  if (!confirm(`Iyun (research) mode does deep analysis with multiple source lookups.\n\nYou have ${remaining}/2 Iyun sessions remaining on this device (lifetime, no reset).\n\nProceed?`)) return;
+  const remaining = getIyunRemaining();
   $("#modal-kind").textContent = "iyun";
   $("#modal-kind").classList.remove("modal-kind-deep");
   $("#modal-kind").classList.add("modal-kind-iyun");
   $("#modal-ref").textContent = currentDaf.base_ref;
-  const src = $("#modal-source");
-  src.innerHTML = `<div style="font-family: Georgia, serif; font-size: 0.85rem; color: var(--muted); font-style: italic;">Deep research on this sugya — fetching parallels, halachic applications, concept sources…</div>`;
-  $("#modal-body").innerHTML = '<span class="cursor"></span>';
-  conversation = [];
-  currentSystem = IYUN_MODE_PROMPT;
-  currentMaxTokens = 8192;
-  currentMode = "iyun";
-  currentUserPrefix = buildLogicChainMessage(currentDaf); // reuses the rich daf context builder
-  $("#followup-input").value = "";
   $("#modal").classList.remove("modal-hidden");
   lockBodyScroll();
-  conversation = [{ role: "user", content: currentUserPrefix }];
-  streamTurn();
+
+  // Out of iyun credits? Show upgrade message, don't proceed.
+  if (remaining <= 0) {
+    $("#modal-source").innerHTML = "";
+    $("#modal-body").innerHTML = `
+      <h3>Out of Iyun sessions</h3>
+      <p>You've used your <strong>2 free Iyun sessions</strong> on this device (lifetime cap — they don't reset).</p>
+      <p>For unlimited Iyun, add your own Anthropic API key in
+      <a href="#" onclick="openSettings();return false;" style="color:var(--accent)">⚙ Settings</a>.
+      Get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer" style="color:var(--accent)">console.anthropic.com</a>.</p>
+    `;
+    return;
+  }
+
+  // Inline confirm step — user clicks "Start Iyun" to actually spend the credit.
+  $("#modal-source").innerHTML = `<div style="font-family: Georgia, serif; font-size: 0.88rem; color: var(--ink); font-style: italic;">You have <strong>${remaining}/2</strong> Iyun sessions on this device (lifetime). This will use 1.</div>`;
+  $("#modal-body").innerHTML = `
+    <h3>Iyun — deep research mode</h3>
+    <p>Claude will research the full sugya: identify key lomdus concepts (migo, chazaka, etc.), fetch parallel sugyas + halachic applications, and produce a 1500-3000 word structured analysis. Takes ~30-60 seconds and uses multiple source lookups.</p>
+    <p><button id="iyun-start-btn" style="background:#3f2a4a;color:#f5eedb;border:none;padding:.65rem 1.2rem;border-radius:3px;cursor:pointer;font-family:inherit;font-weight:600;font-size:0.95rem;">Start Iyun on ${escapeHtml(currentDaf.base_ref)} →</button></p>
+    <p style="font-size:0.82rem;color:var(--muted);"><em>Your ${remaining-1} remaining Iyun sessions are preserved if you cancel.</em></p>
+  `;
+  $("#iyun-start-btn").onclick = () => {
+    $("#modal-body").innerHTML = '<span class="cursor"></span>';
+    $("#modal-source").innerHTML = `<div style="font-family: Georgia, serif; font-size: 0.85rem; color: var(--muted); font-style: italic;">Deep research on this sugya — fetching parallels, halachic applications, concept sources…</div>`;
+    conversation = [];
+    currentSystem = IYUN_MODE_PROMPT;
+    currentMaxTokens = 8192;
+    currentMode = "iyun";
+    currentUserPrefix = buildLogicChainMessage(currentDaf);
+    conversation = [{ role: "user", content: currentUserPrefix }];
+    streamTurn();
+  };
 }
 
 function openLogicChain() {
