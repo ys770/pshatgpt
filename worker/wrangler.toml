@@ -2,6 +2,21 @@ name = "pshatgpt-proxy"
 main = "src/index.js"
 compatibility_date = "2024-10-01"
 
+[observability]
+enabled = false
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = false
+persist = true
+head_sampling_rate = 1
+
 [[kv_namespaces]]
 binding = "PSHATGPT"
 id = "d00e1ca559124da0b3c506c41112afc8"
@@ -10,7 +25,7 @@ id = "d00e1ca559124da0b3c506c41112afc8"
 # Per-IP daily free explanations.
 FREE_TIER_DAILY = "10"
 # Comma-separated allowed origins. "*" lets anyone call your worker.
-ALLOWED_ORIGINS = "https://ys770.github.io,http://localhost:8000,http://127.0.0.1:8000,http://localhost:8002,http://127.0.0.1:8002"
+ALLOWED_ORIGINS = "https://ys770.github.io"
 
 # Secret (set via `wrangler secret put ANTHROPIC_API_KEY`):
 #   ANTHROPIC_API_KEY

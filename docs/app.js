@@ -343,10 +343,56 @@ async function loadDaf(ref, meforshim) {
     const daf = await fetchDaf(ref, meforshim);
     currentDaf = daf;
     renderDaf(daf);
+    applyColVisibility();
   } catch (e) {
     $("#daf-title").textContent = `Error: ${e.message}`;
   }
 }
+
+// ---------- Mobile column toggles ----------
+const COL_VISIBILITY_KEY = "pshatgpt_col_visibility";
+
+function getColVisibility() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(COL_VISIBILITY_KEY) || "{}");
+    return {
+      gemara: saved.gemara !== false,
+      rashi: saved.rashi !== false,
+      tosafot: saved.tosafot !== false,
+    };
+  } catch { return { gemara: true, rashi: true, tosafot: true }; }
+}
+
+function setColVisibility(vis) {
+  localStorage.setItem(COL_VISIBILITY_KEY, JSON.stringify(vis));
+  applyColVisibility();
+}
+
+function applyColVisibility() {
+  const vis = getColVisibility();
+  // Update the pill states
+  $$(".col-toggle").forEach(b => b.classList.toggle("active", vis[b.dataset.col]));
+  // Update the daf-page class flags
+  const page = document.querySelector(".daf-page");
+  if (page) {
+    page.classList.toggle("hide-gemara", !vis.gemara);
+    page.classList.toggle("hide-rashi", !vis.rashi);
+    page.classList.toggle("hide-tosafot", !vis.tosafot);
+  }
+  // If all three off, turn gemara back on — can't have nothing visible.
+  if (!vis.gemara && !vis.rashi && !vis.tosafot) {
+    setColVisibility({ ...vis, gemara: true });
+  }
+}
+
+$$(".col-toggle").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const col = btn.dataset.col;
+    const vis = getColVisibility();
+    vis[col] = !vis[col];
+    setColVisibility(vis);
+  });
+});
 
 // Prev/next navigation within a masechta.
 function neighborRef(ref, direction) {
