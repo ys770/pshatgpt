@@ -375,12 +375,20 @@ function neighborRef(ref, direction) {
 function updateDafNav(ref) {
   const prev = neighborRef(ref, "prev");
   const next = neighborRef(ref, "next");
-  const prevBtn = $("#daf-prev");
-  const nextBtn = $("#daf-next");
-  if (prevBtn) prevBtn.disabled = !prev;
-  if (nextBtn) nextBtn.disabled = !next;
-  if (prevBtn) prevBtn.dataset.target = prev ? prev.ref : "";
-  if (nextBtn) nextBtn.dataset.target = next ? next.ref : "";
+  for (const id of ["#daf-prev", "#daf-prev-bottom"]) {
+    const btn = $(id);
+    if (btn) {
+      btn.disabled = !prev;
+      btn.dataset.target = prev ? prev.ref : "";
+    }
+  }
+  for (const id of ["#daf-next", "#daf-next-bottom"]) {
+    const btn = $(id);
+    if (btn) {
+      btn.disabled = !next;
+      btn.dataset.target = next ? next.ref : "";
+    }
+  }
 }
 
 function syncPickerToRef(ref) {
@@ -686,20 +694,18 @@ $("#api-key-clear").onclick = () => {
 };
 
 $("#load-btn").onclick = loadCurrentDaf;
-$("#daf-prev").onclick = () => {
-  const t = $("#daf-prev").dataset.target;
-  if (t) loadDaf(t);
-};
-$("#daf-next").onclick = () => {
-  const t = $("#daf-next").dataset.target;
-  if (t) loadDaf(t);
-};
+function wireNav(btnId) {
+  const btn = $(btnId);
+  if (btn) btn.onclick = () => { const t = btn.dataset.target; if (t) { loadDaf(t); window.scrollTo({top: 0, behavior: "smooth"}); } };
+}
+wireNav("#daf-prev"); wireNav("#daf-prev-bottom");
+wireNav("#daf-next"); wireNav("#daf-next-bottom");
 // Keyboard shortcuts for prev/next when the daf is showing
 document.addEventListener("keydown", (e) => {
   if ($("#app-main").classList.contains("app-hidden")) return;
   if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
-  if (e.key === "ArrowLeft" || e.key === "j") $("#daf-prev").click();
-  else if (e.key === "ArrowRight" || e.key === "k") $("#daf-next").click();
+  if (e.key === "ArrowLeft" || e.key === "j") { const b = $("#daf-prev"); if (b && !b.disabled) b.click(); }
+  else if (e.key === "ArrowRight" || e.key === "k") { const b = $("#daf-next"); if (b && !b.disabled) b.click(); }
 });
 $("#tractate-select").addEventListener("change", () => { updateDafHint(); loadCurrentDaf(); });
 $("#daf-number").addEventListener("keydown", e => { if (e.key === "Enter") loadCurrentDaf(); });

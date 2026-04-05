@@ -1022,6 +1022,12 @@ main { max-width: 1400px; margin: 0 auto; padding: 2rem; }
 .daf-nav-btn:hover { background: var(--hover); border-color: var(--accent); color: var(--accent); }
 .daf-nav-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .daf-nav-btn:disabled:hover { background: transparent; border-color: var(--rule); color: var(--ink); }
+#daf-nav-bottom {
+  display: flex; justify-content: space-between; gap: 0.5rem;
+  margin-top: 1.5rem; padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
+}
+#daf-nav-bottom .daf-nav-btn { padding: 0.55rem 1.25rem; font-size: 0.9rem; }
 
 /* Tzuras hadaf — authentic Vilna page look */
 #daf {
