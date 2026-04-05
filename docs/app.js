@@ -167,6 +167,9 @@ let INDEX = null;
 let currentAmud = "a";
 let currentDaf = null;  // {base_ref, segments, meforshim_by_seg}
 let currentStream = null;
+let conversation = [];       // [{role, content}, ...] within one modal session
+let currentSystem = "";
+let currentUserPrefix = "";
 
 // ---------- Sefaria fetching ----------
 const TAG_RE = /<[^>]+>/g;
@@ -684,6 +687,11 @@ function openExplain(ref, kind, hebrewText, englishText, context) {
   he.textContent = hebrewText;
   src.appendChild(he);
   $("#modal-body").innerHTML = '<span class="cursor"></span>';
+  // Reset conversation for the new segment.
+  conversation = [];
+  currentSystem = SYSTEM_PROMPT;
+  currentUserPrefix = buildUserMessage(ref, context, currentDaf);
+  $("#followup-input").value = "";
   $("#modal").classList.remove("modal-hidden");
   lockBodyScroll();
   startExplain(ref, context);
@@ -692,6 +700,7 @@ function openExplain(ref, kind, hebrewText, englishText, context) {
 function closeModal() {
   $("#modal").classList.add("modal-hidden");
   if (currentStream) { currentStream.abort(); currentStream = null; }
+  conversation = [];
   if (!anyModalOpen()) unlockBodyScroll();
 }
 
@@ -745,19 +754,57 @@ function buildUserMessage(ref, ctx, currentDaf) {
 }
 
 async function startExplain(ref, ctx) {
+  // Initial explanation: seed conversation with the first user turn.
+  conversation = [{ role: "user", content: currentUserPrefix }];
+  await streamTurn();
+}
+
+async function sendFollowup(question) {
+  if (!question.trim()) return;
+  // Append user turn visually + to state.
+  appendUserTurn(question);
+  conversation.push({ role: "user", content: question });
+  await streamTurn();
+}
+
+function appendUserTurn(text) {
+  const body = $("#modal-body");
+  const div = document.createElement("div");
+  div.className = "turn-user";
+  div.textContent = text;
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+}
+
+async function streamTurn() {
   if (currentStream) currentStream.abort();
   const body = $("#modal-body");
-  body.innerHTML = '<span class="cursor"></span>';
+
+  // Append an assistant container + cursor. All turns go inside modal-body.
+  const assistantDiv = document.createElement("div");
+  assistantDiv.className = "turn-assistant";
+  assistantDiv.innerHTML = '<span class="cursor"></span>';
+  // First turn: REPLACE the initial cursor; follow-ups: APPEND.
+  if (conversation.length === 1) {
+    body.innerHTML = "";
+  }
+  body.appendChild(assistantDiv);
+  body.scrollTop = body.scrollHeight;
+
+  // Disable input during streaming.
+  const input = $("#followup-input");
+  const sendBtn = $("#followup-send");
+  input.disabled = true; sendBtn.disabled = true;
 
   const apiKey = getApiKey();
   const useProxy = !apiKey && PROXY_URL;
 
   if (!apiKey && !PROXY_URL) {
-    body.innerHTML = `<em>No API key saved. Click ⚙ Settings to add one.</em>`;
+    assistantDiv.innerHTML = `<em>No API key saved. Click ⚙ Settings to add one.</em>`;
+    input.disabled = false; sendBtn.disabled = false;
     return;
   }
 
-  const userMsg = buildUserMessage(ref, ctx, currentDaf);
   const controller = new AbortController();
   currentStream = controller;
 
@@ -781,35 +828,34 @@ async function startExplain(ref, ctx) {
         model: MODEL,
         max_tokens: 2048,
         temperature: 0.3,
-        system: SYSTEM_PROMPT,
-        messages: [{ role: "user", content: userMsg }],
+        system: currentSystem,
+        messages: conversation,
         stream: true,
       }),
     });
   } catch (err) {
-    if (err.name !== "AbortError") body.innerHTML = `<em>Network error: ${escapeHtml(err.message)}</em>`;
+    if (err.name !== "AbortError") assistantDiv.innerHTML = `<em>Network error: ${escapeHtml(err.message)}</em>`;
+    input.disabled = false; sendBtn.disabled = false;
     return;
   }
   if (!resp.ok) {
     const txt = await resp.text();
-    // Rate limit reached on the free tier: give a clear upgrade message.
     if (resp.status === 429 && useProxy) {
-      body.innerHTML = `
+      assistantDiv.innerHTML = `
         <strong>Free-tier daily limit reached.</strong><br><br>
         You've used your 10 free explanations for today. For unlimited,
         add your own Anthropic API key in
-        <a href="#" onclick="openSettings();return false;" style="color:var(--accent)">⚙ Settings</a>
-        — get one at
-        <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noreferrer" style="color:var(--accent)">console.anthropic.com</a>.
+        <a href="#" onclick="openSettings();return false;" style="color:var(--accent)">⚙ Settings</a>.
       `;
+      input.disabled = false; sendBtn.disabled = false;
       return;
     }
     let msg = txt.slice(0, 400);
     try { const j = JSON.parse(txt); if (j.message) msg = j.message; else if (j.error?.message) msg = j.error.message; } catch {}
-    body.innerHTML = `<em>Error ${resp.status}: ${escapeHtml(msg)}</em>`;
+    assistantDiv.innerHTML = `<em>Error ${resp.status}: ${escapeHtml(msg)}</em>`;
+    input.disabled = false; sendBtn.disabled = false;
     return;
   }
-  // Track remaining free-tier quota if the proxy reported it.
   if (useProxy) {
     const remaining = resp.headers.get("x-pshatgpt-remaining");
     const limit = resp.headers.get("x-pshatgpt-limit");
@@ -838,7 +884,7 @@ async function startExplain(ref, ctx) {
           const evt = JSON.parse(data);
           if (evt.type === "content_block_delta" && evt.delta?.type === "text_delta") {
             accumulated += evt.delta.text;
-            body.innerHTML = renderMarkdownish(accumulated) + '<span class="cursor"></span>';
+            assistantDiv.innerHTML = renderMarkdownish(accumulated) + '<span class="cursor"></span>';
             body.scrollTop = body.scrollHeight;
           }
         } catch (e) { /* partial */ }
@@ -847,8 +893,13 @@ async function startExplain(ref, ctx) {
   } catch (err) {
     if (err.name !== "AbortError") console.error(err);
   }
-  body.innerHTML = renderMarkdownish(accumulated);
+  assistantDiv.innerHTML = renderMarkdownish(accumulated);
+  // Save assistant turn to conversation history.
+  if (accumulated) conversation.push({ role: "assistant", content: accumulated });
   currentStream = null;
+  input.disabled = false; sendBtn.disabled = false;
+  // Focus input for quick follow-up (unless modal closed).
+  if (!$("#modal").classList.contains("modal-hidden")) input.focus();
 }
 
 function renderMarkdownish(text) {
@@ -1025,6 +1076,28 @@ $$(".amud-btn").forEach(b => {
 $$("[data-close]").forEach(el => el.addEventListener("click", closeModal));
 document.addEventListener("keydown", e => {
   if (e.key === "Escape") { closeModal(); closeSettings(); }
+});
+
+// Follow-up form
+$("#followup-form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const input = $("#followup-input");
+  const q = input.value.trim();
+  if (!q || input.disabled) return;
+  input.value = "";
+  input.style.height = "auto";
+  sendFollowup(q);
+});
+$("#followup-input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    $("#followup-form").requestSubmit();
+  }
+});
+// Auto-grow textarea
+$("#followup-input").addEventListener("input", (e) => {
+  e.target.style.height = "auto";
+  e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px";
 });
 
 // ---------- Landing screen ----------

@@ -1346,6 +1346,51 @@ body.modal-open {
 }
 .modal-body em { font-style: italic; }
 
+/* Conversation turns inside the modal */
+.turn-user {
+  background: var(--bg);
+  border-left: 2px solid var(--accent);
+  padding: 0.7rem 0.95rem;
+  margin: 1rem 0 0.75rem;
+  font-style: italic;
+  color: var(--ink);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.turn-user::before {
+  content: "you asked";
+  display: block;
+  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em;
+  text-transform: uppercase; font-style: normal;
+  color: var(--accent); margin-bottom: 0.3rem;
+  font-family: Georgia, serif;
+}
+.turn-assistant { margin-top: 0.25rem; }
+
+/* Follow-up input bar */
+.followup-form {
+  display: flex; gap: 0.5rem; align-items: flex-end;
+  padding: 0.65rem 0.85rem; background: var(--bg);
+  border-top: 1px solid var(--rule); flex-shrink: 0;
+}
+#followup-input {
+  flex: 1; border: 1px solid var(--rule); border-radius: 4px;
+  padding: 0.55rem 0.75rem; font-family: inherit; font-size: 0.9rem;
+  background: var(--card); color: var(--ink);
+  resize: none; min-height: 36px; max-height: 120px;
+  line-height: 1.4; outline: none; transition: border-color 0.12s;
+}
+#followup-input:focus { border-color: var(--accent); }
+#followup-input:disabled { opacity: 0.5; cursor: not-allowed; }
+#followup-send {
+  background: var(--accent); color: var(--card); border: none;
+  width: 36px; height: 36px; border-radius: 4px; cursor: pointer;
+  font-size: 1.2rem; line-height: 1; font-weight: 700;
+  transition: all 0.12s; flex-shrink: 0;
+}
+#followup-send:hover { filter: brightness(1.1); transform: translateY(-1px); }
+#followup-send:disabled { background: var(--muted); cursor: not-allowed; transform: none; }
+
 /* Free-tier badge (floating, always visible when using free tier) */
 .free-tier-badge {
   position: fixed; bottom: 1rem; right: 1rem; z-index: 50;
