@@ -1,0 +1,18 @@
+<svg width="100%" viewBox="0 0 680 280" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- Big bold Hebrew Peh as background glyph -->
+  <text x="340" y="210" text-anchor="middle" font-family="serif" font-size="240" font-weight="900" fill="#f0ece4" letter-spacing="0" style="fill:rgb(240, 236, 228);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:serif;font-size:240px;font-weight:900;text-anchor:middle;dominant-baseline:auto">פ</text>
+
+  <!-- Wordmark -->
+  <text x="340" y="155" text-anchor="middle" font-family="'Courier New', monospace" font-size="72" font-weight="700" fill="#111111" letter-spacing="-2" style="fill:rgb(17, 17, 17);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Courier New&quot;, monospace;font-size:72px;font-weight:700;text-anchor:middle;dominant-baseline:auto">
+    <tspan style="fill:rgb(17, 17, 17);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Courier New&quot;, monospace;font-size:72px;font-weight:700;text-anchor:middle;dominant-baseline:auto">Pshat</tspan><tspan fill="#e8383d" style="fill:rgb(232, 56, 61);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Courier New&quot;, monospace;font-size:72px;font-weight:700;text-anchor:middle;dominant-baseline:auto">GPT</tspan>
+  </text>
+
+  <!-- Tagline -->
+  <text x="340" y="195" text-anchor="middle" font-family="'Courier New', monospace" font-size="13" fill="#888888" letter-spacing="4" style="fill:rgb(136, 136, 136);stroke:none;color:rgb(0, 0, 0);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;opacity:1;font-family:&quot;Courier New&quot;, monospace;font-size:13px;font-weight:400;text-anchor:middle;dominant-baseline:auto">GEMARA · EXPLAINED</text>
+</svg>

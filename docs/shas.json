@@ -1,0 +1,401 @@
+{
+  "sederim": [
+    {
+      "seder": "Zeraim",
+      "tractates": [
+        {
+          "name": "Berakhot",
+          "hebrew": "ברכות",
+          "last_daf": 64,
+          "last_amud": "a",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        }
+      ]
+    },
+    {
+      "seder": "Moed",
+      "tractates": [
+        {
+          "name": "Shabbat",
+          "hebrew": "שבת",
+          "last_daf": 157,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Eruvin",
+          "hebrew": "עירובין",
+          "last_daf": 105,
+          "last_amud": "a",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Pesachim",
+          "hebrew": "פסחים",
+          "last_daf": 121,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Yoma",
+          "hebrew": "יומא",
+          "last_daf": 88,
+          "last_amud": "a",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Sukkah",
+          "hebrew": "סוכה",
+          "last_daf": 56,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Beitzah",
+          "hebrew": "ביצה",
+          "last_daf": 40,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Rosh Hashanah",
+          "hebrew": "ראש השנה",
+          "last_daf": 35,
+          "last_amud": "a",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Taanit",
+          "hebrew": "תענית",
+          "last_daf": 31,
+          "last_amud": "a",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Megillah",
+          "hebrew": "מגילה",
+          "last_daf": 32,
+          "last_amud": "a",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Moed Katan",
+          "hebrew": "מועד קטן",
+          "last_daf": 29,
+          "last_amud": "a",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Chagigah",
+          "hebrew": "חגיגה",
+          "last_daf": 27,
+          "last_amud": "a",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        }
+      ]
+    },
+    {
+      "seder": "Nashim",
+      "tractates": [
+        {
+          "name": "Yevamot",
+          "hebrew": "יבמות",
+          "last_daf": 122,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Ketubot",
+          "hebrew": "כתובות",
+          "last_daf": 112,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Nedarim",
+          "hebrew": "נדרים",
+          "last_daf": 91,
+          "last_amud": "b",
+          "meforshim": [
+            "Ran on Nedarim",
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Nazir",
+          "hebrew": "נזיר",
+          "last_daf": 66,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Sotah",
+          "hebrew": "סוטה",
+          "last_daf": 49,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Gittin",
+          "hebrew": "גיטין",
+          "last_daf": 90,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Kiddushin",
+          "hebrew": "קידושין",
+          "last_daf": 82,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        }
+      ]
+    },
+    {
+      "seder": "Nezikin",
+      "tractates": [
+        {
+          "name": "Bava Kamma",
+          "hebrew": "בבא קמא",
+          "last_daf": 119,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Bava Metzia",
+          "hebrew": "בבא מציעא",
+          "last_daf": 119,
+          "last_amud": "a",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Bava Batra",
+          "hebrew": "בבא בתרא",
+          "last_daf": 176,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashbam",
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Sanhedrin",
+          "hebrew": "סנהדרין",
+          "last_daf": 113,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Makkot",
+          "hebrew": "מכות",
+          "last_daf": 24,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Shevuot",
+          "hebrew": "שבועות",
+          "last_daf": 49,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Avodah Zarah",
+          "hebrew": "עבודה זרה",
+          "last_daf": 76,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Horayot",
+          "hebrew": "הוריות",
+          "last_daf": 14,
+          "last_amud": "a",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        }
+      ]
+    },
+    {
+      "seder": "Kodashim",
+      "tractates": [
+        {
+          "name": "Zevachim",
+          "hebrew": "זבחים",
+          "last_daf": 120,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Menachot",
+          "hebrew": "מנחות",
+          "last_daf": 110,
+          "last_amud": "a",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Chullin",
+          "hebrew": "חולין",
+          "last_daf": 142,
+          "last_amud": "a",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Bekhorot",
+          "hebrew": "בכורות",
+          "last_daf": 61,
+          "last_amud": "a",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Arakhin",
+          "hebrew": "ערכין",
+          "last_daf": 34,
+          "last_amud": "a",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Temurah",
+          "hebrew": "תמורה",
+          "last_daf": 34,
+          "last_amud": "a",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Keritot",
+          "hebrew": "כריתות",
+          "last_daf": 28,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Meilah",
+          "hebrew": "מעילה",
+          "last_daf": 22,
+          "last_amud": "a",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Tamid",
+          "hebrew": "תמיד",
+          "last_daf": 33,
+          "last_amud": "b",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        },
+        {
+          "name": "Niddah",
+          "hebrew": "נדה",
+          "last_daf": 73,
+          "last_amud": "a",
+          "meforshim": [
+            "Rashi",
+            "Tosafot"
+          ]
+        }
+      ]
+    }
+  ]
+}
