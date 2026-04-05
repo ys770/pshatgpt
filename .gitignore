@@ -3,6 +3,11 @@
 .env.local
 *.key
 
+# Private planning docs — keep locally, don't publish
+ROADMAP.md
+PLAN.md
+*.private.md
+
 # The 3GB of scanned Shas PDFs — too big for git, users download separately
 tzuras_hadaf_pdfs/
 
