@@ -1,8 +1,18 @@
 # PshatGPT
 
+**Live: [ys770.github.io/pshatgpt](https://ys770.github.io/pshatgpt/)**
+
 AI-assisted tzuras hadaf. Click any line of Gemara, Rashi/Rashbam, or Tosafot — get a contextual explanation streamed to you.
 
 Pshat (פשט) = the plain-meaning reading. This tool gives you that first layer, fast, with the commentary structure intact.
+
+## Quick start
+
+1. Open [ys770.github.io/pshatgpt](https://ys770.github.io/pshatgpt/)
+2. Click ⚙ Settings → paste your Anthropic API key ([get one](https://console.anthropic.com/settings/keys)) → Save
+3. Pick a tractate + daf → click anything Hebrew → watch Claude explain it
+
+Your API key stays in your browser's localStorage and is sent directly to Anthropic — it never touches any server.
 
 ## What it does
 
@@ -14,27 +24,38 @@ Pshat (פשט) = the plain-meaning reading. This tool gives you that first layer
 
 ## Architecture
 
+PshatGPT runs in **two modes**:
+
+### Static mode (deployed on GitHub Pages)
+
 ```
-Browser (3-col tzuras hadaf)
-     │
-     ├── GET /api/index        → Shas structure (sederim, tractates, daf counts)
-     ├── GET /api/daf?ref=...  → gemara text + Rashbam/Rashi/Tosafot on this daf
-     └── GET /api/explain?ref=X → SSE stream of Claude explanation
-            │
-            ├── Sefaria REST  (text fetched at load-time, cached per daf)
-            └── Anthropic API (key sent per-request from browser localStorage)
+Browser (on ys770.github.io/pshatgpt)
+   │
+   ├──▶ Sefaria REST    (text + commentaries, CORS-enabled)
+   └──▶ Anthropic API   (streaming, key from localStorage)
 ```
+
+Pure static site. Zero backend. Deploys from `/docs` on master.
+
+### Local dev mode (FastAPI)
+
+```
+Browser  ↔  FastAPI (gemara/web.py)  ↔  Sefaria / Anthropic
+```
+
+Same UI, but the Python backend proxies API calls — useful for iterating on
+the agents, caching, and logging.
 
 - **Sefaria** supplies all Hebrew/Aramaic text and commentaries via its public REST API (no auth).
 - **Anthropic Claude** (claude-sonnet-4-5) generates the explanations. You bring your own API key.
 - **No server-side storage** of keys or user data. Your key lives in your browser.
 
-## Setup
+## Local setup
 
 Requires Python 3.11+.
 
 ```bash
-git clone https://github.com/YOUR/pshatgpt.git
+git clone https://github.com/ys770/pshatgpt.git
 cd pshatgpt
 pip install fastapi uvicorn httpx pydantic anthropic pymupdf
 python -m gemara.web
