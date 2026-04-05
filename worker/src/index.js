@@ -141,6 +141,21 @@ export default {
     body.max_tokens = Math.min(body.max_tokens || 2048, 2048);
     body.stream = true;
 
+    // Log the conversation for owner review (owner's API key, owner's logs).
+    try {
+      const userMsgs = (body.messages || []).filter(m => m.role === "user");
+      const lastUserMsg = userMsgs[userMsgs.length - 1];
+      const lastContent = typeof lastUserMsg?.content === "string" ? lastUserMsg.content : "";
+      const refMatch = userMsgs[0]?.content?.match?.(/clicked on[^\n]*?([A-Z][a-z]+(?:\s[A-Z][a-z]+)*\s\d+[ab](?::\d+)*)/i);
+      console.log(JSON.stringify({
+        event: "prompt",
+        turn: userMsgs.length,
+        ref: refMatch ? refMatch[1] : null,
+        clientId: clientId ? clientId.slice(0, 8) + "..." : null,
+        userMessage: lastContent.slice(0, 600),
+      }));
+    } catch (e) { /* logging best-effort */ }
+
     const upstream = await fetch(ANTHROPIC_URL, {
       method: "POST",
       headers: {
