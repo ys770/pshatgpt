@@ -1038,7 +1038,7 @@ function openExplain(ref, kind, hebrewText, englishText, context) {
   // Reset conversation for the new segment.
   conversation = [];
   currentSystem = isDeep ? DEEP_TOSAFOT_PROMPT : SYSTEM_PROMPT;
-  currentMaxTokens = isDeep ? DEEP_MAX_TOKENS : 2048;
+  currentMaxTokens = isDeep ? deepBudgetFor(context?.text) : 2048;
   currentUserPrefix = buildUserMessage(ref, context, currentDaf);
   $("#followup-input").value = "";
   $("#modal").classList.remove("modal-hidden");
@@ -1227,7 +1227,17 @@ function updateMinimizedPillState() {
 
 // A commentary longer than this triggers the deep-analysis system prompt.
 const DEEP_THRESHOLD = 400;
-const DEEP_MAX_TOKENS = 4096;
+// Deep-mode output scales with source length — long Tosfos need long analysis.
+// Mirrors gemara/agents/explainer.py: ~6 output tokens per Hebrew source char,
+// floored at 4096 so short segments have room, ceilinged at 16384. A fixed
+// 4096 was silently truncating multi-part Tosfos mid-stream.
+const DEEP_MIN_BUDGET = 4096;
+const DEEP_MAX_BUDGET = 16384;
+const DEEP_TOKENS_PER_CHAR = 6;
+function deepBudgetFor(text) {
+  const est = (text?.length || 0) * DEEP_TOKENS_PER_CHAR;
+  return Math.max(DEEP_MIN_BUDGET, Math.min(DEEP_MAX_BUDGET, est));
+}
 
 const IYUN_MODE_PROMPT = `You are a rosh yeshiva doing **iyun** — deep, comprehensive research on a sugya. The learner has activated research mode (this is expensive so use your tools thoughtfully). Produce a structured, thorough analysis.
 
@@ -1602,7 +1612,7 @@ function openLogicChain() {
   $("#modal-body").innerHTML = '<span class="cursor"></span>';
   conversation = [];
   currentSystem = LOGIC_CHAIN_PROMPT;
-  currentMaxTokens = DEEP_MAX_TOKENS;
+  currentMaxTokens = DEEP_MIN_BUDGET;
   currentUserPrefix = buildLogicChainMessage(currentDaf);
   $("#followup-input").value = "";
   $("#modal").classList.remove("modal-hidden");
