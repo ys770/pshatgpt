@@ -425,11 +425,13 @@ async function startStream(ref) {
   } else if (!sawAnyChunk) {
     statusHtml = renderStatus("error", "No response received. Try again.");
   } else if (stopReason === "max_tokens") {
+    // Hitting the length cap on a long Tosfos isn't an error — the answer is
+    // still valid, just possibly incomplete. Label it as done + note, not red.
     statusHtml = renderStatus(
       "truncated",
-      "⚠ Response was cut off (hit the length limit). Try clicking again for a fresh attempt."
+      "✓ Done (response reached the length limit — click again if you want it to continue)."
     );
-  } else if (stopReason === "end_turn" || stopReason === "stop_sequence") {
+  } else if (stopReason === "end_turn" || stopReason === "stop_sequence" || stopReason === "pause_turn") {
     statusHtml = renderStatus("ready", "✓ Ready");
   } else {
     statusHtml = renderStatus(

@@ -28,7 +28,7 @@ class LLMClient:
     def __init__(
         self,
         model: str = "claude-sonnet-4-5",
-        max_tokens: int = 8192,
+        max_tokens: int = 16384,
         api_key: str | None = None,
     ):
         # Prefer explicit api_key, fall back to env.
@@ -53,29 +53,45 @@ class LLMClient:
         return response.content[0].text
 
     def stream(
-        self, system: str, user_message: str, temperature: float = 0.5
+        self,
+        system: str,
+        user_message: str,
+        temperature: float = 0.5,
+        max_tokens: int | None = None,
+        model: str | None = None,
     ) -> Iterator[dict]:
         """Yield structured events as they arrive from Claude.
 
         Events:
           {"type": "text", "text": "..."}        — a text chunk
           {"type": "done", "stop_reason": "..."} — terminal event, always last
+
+        We iterate the raw event stream and pull stop_reason directly off the
+        message_delta event. That's the only authoritative source — relying on
+        helpers like get_final_message() has proven flaky across SDK versions.
         """
+        effective_max = max_tokens if max_tokens is not None else self.max_tokens
+        effective_model = model or self.model
         stop_reason: str | None = None
         with self.client.messages.stream(
-            model=self.model,
-            max_tokens=self.max_tokens,
+            model=effective_model,
+            max_tokens=effective_max,
             temperature=temperature,
             system=system,
             messages=[{"role": "user", "content": user_message}],
         ) as s:
-            for chunk in s.text_stream:
-                yield {"type": "text", "text": chunk}
-            # After text_stream exhausts, the final message is available with
-            # the real stop_reason (end_turn, max_tokens, stop_sequence, ...).
-            try:
-                final = s.get_final_message()
-                stop_reason = getattr(final, "stop_reason", None)
-            except Exception:
-                stop_reason = None
+            for event in s:
+                etype = getattr(event, "type", None)
+                if etype == "content_block_delta":
+                    delta = getattr(event, "delta", None)
+                    if delta is not None and getattr(delta, "type", None) == "text_delta":
+                        text = getattr(delta, "text", "") or ""
+                        if text:
+                            yield {"type": "text", "text": text}
+                elif etype == "message_delta":
+                    delta = getattr(event, "delta", None)
+                    if delta is not None:
+                        sr = getattr(delta, "stop_reason", None)
+                        if sr:
+                            stop_reason = sr
         yield {"type": "done", "stop_reason": stop_reason}
