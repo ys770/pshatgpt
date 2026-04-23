@@ -28,7 +28,7 @@ class LLMClient:
     def __init__(
         self,
         model: str = "claude-sonnet-4-5",
-        max_tokens: int = 16384,
+        max_tokens: int = 32000,
         api_key: str | None = None,
     ):
         # Prefer explicit api_key, fall back to env.
