@@ -69,6 +69,13 @@ _OUTPUT_TOKENS_PER_SOURCE_CHAR = 6
 _MIN_BUDGET = 4096
 _MAX_BUDGET = 16384
 
+# Above this much Hebrew source text, a Tosfos is "deep" enough that Opus's
+# stronger multi-step reasoning is worth the extra cost; shorter clicks stay
+# on Sonnet.
+_DEEP_TOSFOS_CHAR_THRESHOLD = 1200
+_SONNET_MODEL = "claude-sonnet-4-5"
+_OPUS_MODEL = "claude-opus-4-7"
+
 
 def _estimate_budget(item: dict) -> int:
     """Pick a max_tokens budget proportional to the source text length."""
@@ -80,6 +87,17 @@ def _estimate_budget(item: dict) -> int:
     return max(_MIN_BUDGET, min(_MAX_BUDGET, est))
 
 
+def _pick_model(item: dict) -> str:
+    """Route deep Tosfos to Opus; everything else stays on Sonnet."""
+    if item.get("kind") != "commentary":
+        return _SONNET_MODEL
+    if item.get("commentator") != "Tosafot":
+        return _SONNET_MODEL
+    if len(item.get("text") or "") < _DEEP_TOSFOS_CHAR_THRESHOLD:
+        return _SONNET_MODEL
+    return _OPUS_MODEL
+
+
 def explain_stream(llm: LLMClient, item: dict) -> Iterator[dict]:
     """Stream explanation events for a clicked item.
 
@@ -88,4 +106,7 @@ def explain_stream(llm: LLMClient, item: dict) -> Iterator[dict]:
     """
     user_msg = _build_context(item)
     budget = _estimate_budget(item)
-    yield from llm.stream(SYSTEM_PROMPT, user_msg, temperature=0.3, max_tokens=budget)
+    model = _pick_model(item)
+    yield from llm.stream(
+        SYSTEM_PROMPT, user_msg, temperature=0.3, max_tokens=budget, model=model
+    )

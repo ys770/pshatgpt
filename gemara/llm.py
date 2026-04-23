@@ -58,6 +58,7 @@ class LLMClient:
         user_message: str,
         temperature: float = 0.5,
         max_tokens: int | None = None,
+        model: str | None = None,
     ) -> Iterator[dict]:
         """Yield structured events as they arrive from Claude.
 
@@ -70,9 +71,10 @@ class LLMClient:
         helpers like get_final_message() has proven flaky across SDK versions.
         """
         effective_max = max_tokens if max_tokens is not None else self.max_tokens
+        effective_model = model or self.model
         stop_reason: str | None = None
         with self.client.messages.stream(
-            model=self.model,
+            model=effective_model,
             max_tokens=effective_max,
             temperature=temperature,
             system=system,
