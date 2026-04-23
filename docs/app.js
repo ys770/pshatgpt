@@ -1164,6 +1164,7 @@ function printExplanation() {
     display: none;
   }
   .cursor { display: none; }
+  .stream-status { display: none; }
   footer.print-foot {
     margin-top: 1.5rem; padding-top: 0.6rem;
     border-top: 1px solid #d9cfb7;
@@ -1710,16 +1711,26 @@ async function streamTurn(toolRound = 0) {
   if (toolRound === 0) {
     assistantDiv = document.createElement("div");
     assistantDiv.className = "turn-assistant";
-    assistantDiv.innerHTML = '<span class="cursor"></span>';
     if (conversation.length === 1) {
       body.innerHTML = "";
     }
     body.appendChild(assistantDiv);
     body.scrollTop = body.scrollHeight;
   } else {
-    // Subsequent rounds reuse the last assistantDiv
+    // Subsequent rounds reuse the last assistantDiv but get their own
+    // text block — prior rounds' text stays put, with any tool-use notes
+    // from that round sitting between them in natural reading order.
     assistantDiv = body.querySelector(".turn-assistant:last-child");
+    // Freeze any cursor still blinking on a prior round's block.
+    assistantDiv.querySelectorAll(".cursor").forEach((el) => el.remove());
   }
+
+  // This round's text target. Starts with a placeholder cursor so the
+  // "waiting" state is visible before the first delta lands.
+  const mdDiv = document.createElement("div");
+  mdDiv.className = "md-content";
+  mdDiv.innerHTML = '<span class="cursor"></span>';
+  assistantDiv.appendChild(mdDiv);
 
   // Disable input during streaming.
   const input = $("#followup-input");
@@ -1844,7 +1855,7 @@ async function streamTurn(toolRound = 0) {
               accumulatedText += evt.delta.text;
               contentBlocks[evt.index].text += evt.delta.text;
               // Render just the text blocks accumulated so far
-              updateAssistantText(assistantDiv, accumulatedText);
+              updateAssistantText(mdDiv, accumulatedText);
               body.scrollTop = body.scrollHeight;
             } else if (evt.delta?.type === "input_json_delta") {
               toolInputAccumulators[evt.index] += evt.delta.partial_json || "";
@@ -1871,7 +1882,7 @@ async function streamTurn(toolRound = 0) {
     }
   }
 
-  updateAssistantText(assistantDiv, accumulatedText);
+  updateAssistantText(mdDiv, accumulatedText);
 
   // If Claude wanted to call tools, execute them and loop.
   if (stopReason === "tool_use" && toolRound < MAX_TOOL_ROUNDS) {
@@ -1951,10 +1962,8 @@ function terminalStatusFor(stopReason, text, errorMessage) {
 
 function finalizeStreamStatus(assistantDiv, status) {
   if (!assistantDiv) return;
-  // Strip the blinking cursor — streaming has stopped.
-  const mdDiv = assistantDiv.querySelector(".md-content");
-  if (mdDiv) mdDiv.querySelectorAll(".cursor").forEach((el) => el.remove());
-  assistantDiv.querySelectorAll(":scope > .cursor").forEach((el) => el.remove());
+  // Streaming has stopped — strip any cursor anywhere under this turn.
+  assistantDiv.querySelectorAll(".cursor").forEach((el) => el.remove());
   // Replace any prior status strip (safe across tool-loop recursion or re-finalize).
   assistantDiv.querySelectorAll(".stream-status").forEach((el) => el.remove());
   if (!status) return;
@@ -1964,17 +1973,10 @@ function finalizeStreamStatus(assistantDiv, status) {
   assistantDiv.appendChild(strip);
 }
 
-function updateAssistantText(assistantDiv, text) {
-  // Preserve tool-use notes inside the div, replace/update the markdown section.
-  let mdDiv = assistantDiv.querySelector(".md-content");
-  if (!mdDiv) {
-    // Clear the initial cursor
-    assistantDiv.innerHTML = "";
-    mdDiv = document.createElement("div");
-    mdDiv.className = "md-content";
-    assistantDiv.appendChild(mdDiv);
-  }
-  mdDiv.innerHTML = renderMarkdownish(text) + (text ? '<span class="cursor"></span>' : '<span class="cursor"></span>');
+function updateAssistantText(mdDiv, text) {
+  // Render only this round's text into its own block. Prior rounds'
+  // blocks (and the tool-use notes between them) are untouched.
+  mdDiv.innerHTML = renderMarkdownish(text) + '<span class="cursor"></span>';
 }
 
 function renderMarkdownish(text) {
