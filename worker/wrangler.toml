@@ -24,7 +24,7 @@ IYUN_LIFETIME = "2"
 # Per-IP daily cap — safety net. Iyun counts 5x because it costs ~10x.
 FREE_TIER_DAILY = "25"
 # Comma-separated allowed origins. "*" lets anyone call your worker.
-ALLOWED_ORIGINS = "https://ys770.github.io"
+ALLOWED_ORIGINS = "https://pshatgpt.com,https://www.pshatgpt.com,https://ys770.github.io"
 
 # Secret (set via `wrangler secret put ANTHROPIC_API_KEY`):
 #   ANTHROPIC_API_KEY

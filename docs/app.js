@@ -1184,7 +1184,7 @@ function printExplanation() {
   </header>
   <div class="print-source">${sourceHtml}</div>
   <div class="print-body">${bodyHtml}</div>
-  <footer class="print-foot">ys770.github.io/PshatGPT</footer>
+  <footer class="print-foot">pshatgpt.com</footer>
   <script>
     window.addEventListener("load", function () {
       setTimeout(function () { window.focus(); window.print(); }, 150);

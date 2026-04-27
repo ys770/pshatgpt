@@ -1,6 +1,6 @@
 # PshatGPT Proxy (Cloudflare Worker)
 
-A thin serverless proxy that lets users of the [PshatGPT](https://ys770.github.io/PshatGPT/)
+A thin serverless proxy that lets users of the [PshatGPT](https://pshatgpt.com/)
 web UI get explanations **without needing their own Anthropic API key**. The
 proxy uses the owner's key server-side, caps free use per IP, and streams
 responses straight through from Anthropic.

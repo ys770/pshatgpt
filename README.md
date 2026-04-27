@@ -1,6 +1,6 @@
 # PshatGPT
 
-**Live: [ys770.github.io/PshatGPT](https://ys770.github.io/PshatGPT/)**
+**Live: [pshatgpt.com](https://pshatgpt.com/)**
 
 AI-assisted tzuras hadaf. Click any line of Gemara, Rashi/Rashbam, or Tosafot — get a contextual explanation streamed to you.
 
@@ -8,7 +8,7 @@ Pshat (פשט) = the plain-meaning reading. This tool gives you that first layer
 ### Please note that this is still under development and will be updated often... feel free to help out!
 ## Quick start
 
-1. Open [ys770.github.io/PshatGPT](https://ys770.github.io/PshatGPT/)
+1. Open [pshatgpt.com](https://pshatgpt.com/)
 2. Pick a tractate + daf → click anything Hebrew → watch Claude explain it
 
 **No setup needed** — you get 10 free explanations/day through a shared proxy.
@@ -36,10 +36,10 @@ don't have keys.
 
 PshatGPT runs in **two modes**:
 
-### Static mode (deployed on GitHub Pages)
+### Static mode (deployed on Hostinger)
 
 ```
-Browser (on ys770.github.io/PshatGPT)
+Browser (on pshatgpt.com)
    │
    ├──▶ Sefaria REST    (text + commentaries, CORS-enabled)
    └──▶ Anthropic API   (streaming, key from localStorage)
